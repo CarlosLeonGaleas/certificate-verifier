@@ -1,0 +1,11 @@
+{
+  "name": "@certificate-verifier/core",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch run index.ts"
+  },
+  "dependencies": {
+    "zod": "^3.25.7"
+  }
+}
