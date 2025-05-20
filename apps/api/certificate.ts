@@ -1,14 +1,24 @@
 // import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { Certificate, Examples, ABI, Config } from "@certificate-verifier/core"
+import { Certificate, Examples, loadAcademicCertificateI_ABI, Config } from "@certificate-verifier/core"
 import { JsonRpcProvider, Contract } from "ethers";
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
 import { z } from 'zod';
 import { ErrorResponses, validator } from './common';
 
-const provider = new JsonRpcProvider(Config.API_NETWORK_URL);
-const contract = new Contract(Config.CONTRACT_ADDRESS, ABI, provider);
+async function loadContract() {
+    const provider = new JsonRpcProvider(Config.API_NETWORK_URL);
+    const ABI = await loadAcademicCertificateI_ABI();
+    let contract = null;
+    try {
+        contract = new Contract(Config.CONTRACT_ADDRESS, ABI, provider);
+        console.log('Contrato cargado');
+    } catch (e) {
+        console.error('Error en llamada a contrato:', e);
+    }
+    return { provider, ABI, contract }
+}
 
 export const certificate = new Hono()
     .get('/hash/:hash',
@@ -41,6 +51,7 @@ export const certificate = new Hono()
         validator("param", Certificate.InfoSchema.pick({ hash: true })),
         async (c) => {
             const hash = c.req.valid("param").hash;
+            const { provider, contract } = await loadContract();
             const txReceipt = await provider.getTransactionReceipt(hash);
             const block = await provider.getBlock(txReceipt.blockNumber);
             const parseLog = contract.interface.parseLog(txReceipt.logs);
@@ -79,6 +90,7 @@ export const certificate = new Hono()
         validator("param", Certificate.InfoSchema.pick({ id: true })),
         async (c) => {
             const id = c.req.valid("param").id;
+            const { contract } = await loadContract();
             const certificate = await contract.getCertificateMetadata(id);
 
             if (!certificate) {
@@ -88,6 +100,13 @@ export const certificate = new Hono()
                     message: "The requested certificate could not be found",
                 }, 404);
             }
+            // Convertir cualquier campo que pueda ser BigInt (por precaución)
+            const certificateSanitized = Object.fromEntries(
+                Object.entries(certificate).map(([key, value]) => [
+                    key,
+                    typeof value === "bigint" ? value.toString() : value,
+                ])
+            );
 
-            return c.json({ data: certificate }, 200);
+            return c.json({ data: certificateSanitized }, 200);
         })

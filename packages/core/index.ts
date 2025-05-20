@@ -1,4 +1,4 @@
 export { Certificate } from "./src/certificate"
 export { Examples } from "./src/examples"
-export { default as ABI } from "./src/shared/abi.json";
+export { loadAcademicCertificateI_ABI } from "./src/abi/index.ts";
 export { Config } from "./src/shared/config";
