@@ -1,39 +1,49 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import AppBarCustom from './components/AppBarCustom.tsx'
-import './App.css'
-import DrawerMenu from './components/DrawerMenu.tsx'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import AppBarCustom from './components/AppBarCustom'
+import DrawerMenu from './components/DrawerMenu'
+import HomePage from './components/HomePage'
 
 function App() {
-  const [count, setCount] = useState(0)
-  const [openOptions, setOpenOptions] = useState(false)
+  const [openOptions, setOpenOptions] = useState(true) // true = Drawer expandido
+
+  // Tamaños fijos según diseño
+  const drawerWidth = openOptions ? 260 : 65
+  const appBarHeight = 64
 
   return (
-    <div className="App">
-      <AppBarCustom openOptions={openOptions} handleDrawerToggle={() => setOpenOptions(!openOptions)}></AppBarCustom>
-      <DrawerMenu open={openOptions} handleClose={() => setOpenOptions(false)} />
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Router>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        {/* AppBar arriba */}
+        <AppBarCustom
+            openOptions={openOptions}
+            handleDrawerToggle={() => setOpenOptions(!openOptions)}
+          />
+
+        {/* Área principal */}
+        <div style={{ display: 'flex', flex: 1, width: '100%' }}>
+          {/* Drawer a la izquierda */}
+          <div style={{ width: drawerWidth, transition: 'width 0.3s' }}>
+            <DrawerMenu open={openOptions} handleClose={() => setOpenOptions(false)} />
+          </div>
+
+          {/* Contenido dinámico a la derecha */}
+          <main
+            style={{
+              flexGrow: 1,
+              backgroundColor: '#f0f0f0',
+              marginTop: `${appBarHeight}px`,
+              height: `calc(100vh - ${appBarHeight}px)`,
+              width: `calc(100vh - ${drawerWidth}px)`
+            }}
+          >
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
+    </Router>
   )
 }
 
