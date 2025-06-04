@@ -21,26 +21,34 @@ async function loadContract() {
 
 const mapResponse = (data: { [key: string]: string }): Certificate.InfoType => {
     const issuedAtData = data["5"];
+    console.log("issuedAtData NETO:", issuedAtData);
     //const issuedAtFormated = new Date(issuedAtData * 1000).toISOString();
-    const issuedAtFormated = new Date(issuedAtData * 1000).toLocaleString();
-    console.log(data);
+    const issuedAtFormated = new Date(Number(issuedAtData) * 1000).toLocaleString("es-EC", {
+        timeZone: "America/Guayaquil",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
     return {
-      id: 'N/A', // no viene en la respuesta
-      documentIdentification: data["1"] ?? '',
-      name: data["0"] ?? '',
-      course: data["2"] ?? '',
-      description: data["3"] ?? '',
-      institution: data["4"] ?? '',
-      area: '', // campo faltante
-      issueAt: issuedAtFormated ?? '',
-      startDate: data["6"] ?? '',
-      endDate: '',
-      issueDate: data["7"] ?? '',
-      hoursWorked: parseInt(data["8"] ?? '0', 10),
-      signatoryName: data["9"] ?? '',
-      hash: 'N/A' // campo faltante
+        id: 'N/A', // no viene en la respuesta
+        documentIdentification: data["1"] ?? '',
+        name: data["0"] ?? '',
+        course: data["2"] ?? '',
+        description: data["3"] ?? '',
+        institution: data["4"] ?? '',
+        area: '', // campo faltante
+        issueAt: issuedAtFormated ?? '',
+        startDate: data["6"] ?? '',
+        endDate: '',
+        issueDate: data["7"] ?? '',
+        hoursWorked: parseInt(data["8"] ?? '0', 10),
+        signatoryName: data["9"] ?? '',
+        hash: 'N/A' // campo faltante
     };
-  };
+};
 
 export const certificate = new Hono()
     .get('/hash/:hash',
