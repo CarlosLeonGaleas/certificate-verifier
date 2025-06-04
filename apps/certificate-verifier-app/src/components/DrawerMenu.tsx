@@ -143,7 +143,7 @@ const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
         )}
         <List>
           {drawerItemsVerifier.map((item) => (
-            <DrawerItem key={item.text} label={item.text} icon={item.icon} onClick={handleClose} />
+            <DrawerItem key={item.text} label={item.text} icon={item.icon} />
           ))}
         </List>
         <Divider />
@@ -166,7 +166,7 @@ const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
         )}
         <List>
           {drawerItemsSearch.map((item) => (
-            <DrawerItem key={item.text} label={item.text} icon={item.icon} onClick={handleClose} />
+            <DrawerItem key={item.text} label={item.text} icon={item.icon} />
           ))}
         </List>
       </Box>

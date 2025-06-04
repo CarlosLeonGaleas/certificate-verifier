@@ -13,12 +13,34 @@ async function loadContract() {
     let contract = null;
     try {
         contract = new Contract(Config.CONTRACT_ADDRESS, ABI, provider);
-        console.log('Contrato cargado');
     } catch (e) {
         console.error('Error en llamada a contrato:', e);
     }
     return { provider, ABI, contract }
 }
+
+const mapResponse = (data: { [key: string]: string }): Certificate.InfoType => {
+    const issuedAtData = data["5"];
+    //const issuedAtFormated = new Date(issuedAtData * 1000).toISOString();
+    const issuedAtFormated = new Date(issuedAtData * 1000).toLocaleString();
+    console.log(data);
+    return {
+      id: 'N/A', // no viene en la respuesta
+      documentIdentification: data["1"] ?? '',
+      name: data["0"] ?? '',
+      course: data["2"] ?? '',
+      description: data["3"] ?? '',
+      institution: data["4"] ?? '',
+      area: '', // campo faltante
+      issueAt: issuedAtFormated ?? '',
+      startDate: data["6"] ?? '',
+      endDate: '',
+      issueDate: data["7"] ?? '',
+      hoursWorked: parseInt(data["8"] ?? '0', 10),
+      signatoryName: data["9"] ?? '',
+      hash: 'N/A' // campo faltante
+    };
+  };
 
 export const certificate = new Hono()
     .get('/hash/:hash',
@@ -92,6 +114,7 @@ export const certificate = new Hono()
             const id = c.req.valid("param").id;
             const { contract } = await loadContract();
             const certificate = await contract.getCertificateMetadata(id);
+            console.log(certificate);
 
             if (!certificate) {
                 return c.json({
@@ -107,6 +130,8 @@ export const certificate = new Hono()
                     typeof value === "bigint" ? value.toString() : value,
                 ])
             );
-
-            return c.json({ data: certificateSanitized }, 200);
+            const mappedResponse = mapResponse(certificateSanitized);
+            mappedResponse.id = id.toString();
+            console.log(mappedResponse);
+            return c.json({ data: mappedResponse }, 200)
         })

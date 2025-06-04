@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import AppBarCustom from './components/AppBarCustom'
 import DrawerMenu from './components/DrawerMenu'
 import HomePage from './components/HomePage'
+import HashVerifierPage from './components/HashVerifierPage'
+import IdVerifierPage from './components/IdVerifierPage'
 
 function App() {
   const [openOptions, setOpenOptions] = useState(true) // true = Drawer expandido
@@ -39,6 +41,11 @@ function App() {
           >
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/hash" element={<HashVerifierPage />} />
+              <Route path="/id" element={<IdVerifierPage />} />
+              <Route path="/id/:id" element={<IdVerifierPage />} />
+              <Route path="/ci" element={<HashVerifierPage />} />
+              <Route path="/institution" element={<HashVerifierPage />} />
             </Routes>
           </main>
         </div>

@@ -68,6 +68,7 @@ export namespace Certificate {
         description: z.string(),
         institution: z.string(),
         area: z.string(),
+        issueAt: z.string(),
         startDate: z.string(),
         endDate: z.string(),
         issueDate: z.string(),
