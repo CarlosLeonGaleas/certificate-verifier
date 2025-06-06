@@ -10,9 +10,9 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DrawerItem from './DrawerItem'
 import { drawerItemsVerifier, drawerItemsSearch } from '../icons/index'
 
-const UniversitarioRU_Blanco = 'src/assets/UniversitarioRU_Blanco.svg'
-const UniversitarioRU_Azul = 'src/assets/UniversitarioRU_Azul.svg'
-const InvestigacionLogoVerticalBlanco = 'src/assets/Investigacion_LogoVerticalBlanco.svg'
+const UniversitarioRU_Blanco = '/UniversitarioRU_Blanco.svg'
+const UniversitarioRU_Azul = '/UniversitarioRU_Azul.svg'
+const InvestigacionLogoVerticalBlanco = '/Investigacion_LogoVerticalBlanco.svg'
 
 const drawerWidth = 260
 

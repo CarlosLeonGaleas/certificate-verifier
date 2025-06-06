@@ -82,18 +82,37 @@ export const certificate = new Hono()
         async (c) => {
             const hash = c.req.valid("param").hash;
             const { provider, contract } = await loadContract();
-            const txReceipt = await provider.getTransactionReceipt(hash);
-            const block = await provider.getBlock(txReceipt.blockNumber);
-            const parseLog = contract.interface.parseLog(txReceipt.logs);
 
-            if (!parseLog) {
+            const txReceipt = await provider.getTransactionReceipt(hash);
+            if (!txReceipt) {
                 return c.json({
                     type: "not_found",
                     code: "certificate_not_found",
                     message: "The requested certificate could not be found",
                 }, 404);
             }
-            return c.json({ data: parseLog }, 200)
+            // Get block timestamp
+            const block = await provider.getBlock(txReceipt.blockNumber);
+            const timestamp = block.timestamp;
+
+            for (const log of txReceipt.logs) {
+                try {
+                  const parseLog = contract.interface.parseLog(log);
+                  if (parseLog && parseLog.name === "CertificateMinted") {
+                    console.log("name:", parseLog.args.name);
+                    console.log("id:", parseLog.args.documentIdentification);
+                    console.log("course:", parseLog.args.course);
+                    console.log("description:", parseLog.args.description);
+                    console.log("timestamp:", timestamp);
+                    break;
+                  }
+                } catch (error) {
+                  console.error("Error parsing log:", error);
+                }
+              }
+            // const mappedResponse = mapResponse(parseLog);
+            // mappedResponse.hash = hash;
+            return c.json({ data: "parseLog" }, 200)
         })
     .get("/id/:id",
         describeRoute({

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const NotFound = 'src/assets/react.svg'
+const NotFound = '/vite.svg'
 
 const CertificateNotFound: React.FC = () => {
   return (

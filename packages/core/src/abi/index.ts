@@ -10,7 +10,6 @@ async function loadAcademicCertificateI_ABI() {
     const fileData = await fs.readFile(filePath, 'utf-8');
     const data = JSON.parse(fileData);
     academicCertificateI_abi = data.abi;
-    console.log("ABI", academicCertificateI_abi);
     return academicCertificateI_abi;
   } catch (error) {
     console.error('Error al cargar academicCertificateI_abi:', error);

@@ -37,7 +37,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
       <p>🪧 <strong>Título del Certificado:</strong> {getTitleValue(course)}</p>
       <p>📋 <strong>Descripción:</strong> {description}</p>
       <p>🏫 <strong>Institución emisora:</strong> {institution}</p>
-      <p>🏠 <strong>Area emisora:</strong> {area}</p>
+      <p>🏠 <strong>Área emisora:</strong> {area}</p>
       <p>⛓️ <strong>Registro en la Blockchain:</strong> {issueAt}</p>
       <p>📅 <strong>Lugar y fecha de emisión:</strong> {issueDate}</p>
       <p>📆 <strong>Fecha de Inicio:</strong> {startDate}</p>
