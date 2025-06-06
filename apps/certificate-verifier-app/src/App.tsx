@@ -5,6 +5,7 @@ import DrawerMenu from './components/DrawerMenu'
 import HomePage from './components/HomePage'
 import HashVerifierPage from './components/HashVerifierPage'
 import IdVerifierPage from './components/IdVerifierPage'
+import StepLoader from './components/StepLoader'
 
 function App() {
   const [openOptions, setOpenOptions] = useState(true) // true = Drawer expandido
@@ -35,8 +36,10 @@ function App() {
               flexGrow: 1,
               backgroundColor: '#f0f0f0',
               marginTop: `${appBarHeight}px`,
-              height: `calc(100vh - ${appBarHeight}px)`,
-              width: `calc(100vh - ${drawerWidth}px)`
+              // height: `calc(100vh - ${appBarHeight}px)`,
+              // width: `calc(100vh - ${drawerWidth}px)`
+              height: `100%`,
+              width: `100%`
             }}
           >
             <Routes>
@@ -46,6 +49,7 @@ function App() {
               <Route path="/id/:id" element={<IdVerifierPage />} />
               <Route path="/ci" element={<HashVerifierPage />} />
               <Route path="/institution" element={<HashVerifierPage />} />
+              <Route path="/loader" element={<StepLoader finalSuccess={false}/>} />
             </Routes>
           </main>
         </div>

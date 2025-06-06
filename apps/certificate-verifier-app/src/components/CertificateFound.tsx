@@ -2,6 +2,15 @@
 import React from 'react';
 import { Certificate } from "@certificate-verifier/core"
 
+const getTitleValue = (value: string): string => {
+  const parts = value.split('|');
+  return parts.length > 1 ? parts[1].trim() : value;
+};
+
+const replacePipeWithComma = (value: string): string => {
+  return value.includes('|') ? value.replace(/\|/g, ', ') : value;
+};
+
 const CertificateFound: React.FC<Certificate.InfoType> = ({
   id,
   documentIdentification,
@@ -18,23 +27,24 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   signatoryName,
   hash,
 }) => {
+
   return (
-    <div>
-      <h3>Certificado Encontrado en la Blockchain</h3>
-      <p>ID: {id}</p>
-      <p>Cédula: {documentIdentification}</p>
-      <p>Nombre: {name}</p>
-      <p>Título del Certificado: {course}</p>
-      <p>Descripción: {description}</p>
-      <p>Institución: {institution}</p>
-      <p>Area: {area}</p>
-      <p>Registro en la Blockchain: {issueAt}</p>
-      <p>Lugar y fecha de emisión: {issueDate}</p>
-      <p>Fecha de Inicio: {startDate}</p>
-      <p>Fecha de Fin: {endDate}</p>
-      <p>Horas: {hoursWorked}</p>
-      <p>Hash: {hash}</p>
-      <p>Firmantes: {signatoryName}</p>
+    <div style={{ width: '75%', marginTop: '2rem', backgroundColor: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+      <h2 style={{ textAlign: 'center' }}>Certificado Encontrado en la Blockchain</h2>
+      <p>🆔 <strong>ID del Certificado:</strong> {id}</p>
+      <p>😎 <strong>Beneficiario:</strong> {name}</p>
+      <p>🪪 <strong>Cédula del Beneficiario:</strong> {documentIdentification}</p>
+      <p>🪧 <strong>Título del Certificado:</strong> {getTitleValue(course)}</p>
+      <p>📋 <strong>Descripción:</strong> {description}</p>
+      <p>🏫 <strong>Institución emisora:</strong> {institution}</p>
+      <p>🏠 <strong>Area emisora:</strong> {area}</p>
+      <p>⛓️ <strong>Registro en la Blockchain:</strong> {issueAt}</p>
+      <p>📅 <strong>Lugar y fecha de emisión:</strong> {issueDate}</p>
+      <p>📆 <strong>Fecha de Inicio:</strong> {startDate}</p>
+      <p>📆 <strong>Fecha de Fin:</strong> {endDate}</p>
+      <p>⏳ <strong>Horas:</strong> {hoursWorked}</p>
+      <p>🔒 <strong>Hash:</strong> {hash}</p>
+      <p>✍️ <strong>Firmantes:</strong> {replacePipeWithComma(signatoryName)}</p>
     </div>
   );
 };
