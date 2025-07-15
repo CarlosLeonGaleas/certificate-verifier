@@ -1,6 +1,6 @@
 // import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { Certificate, Examples, loadAcademicCertificateI_ABI, Config } from "@certificate-verifier/core"
+import { Certificate, Examples, loadAcademicCertificateI_ABI, Config, CertificateRetriever, processTransaction, getDataFromTokenId, processBatchTransactions, RunMigration, RunMigration2 } from "@certificate-verifier/core"
 import { JsonRpcProvider, Contract } from "ethers";
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
@@ -81,38 +81,8 @@ export const certificate = new Hono()
         validator("param", Certificate.InfoSchema.pick({ hash: true })),
         async (c) => {
             const hash = c.req.valid("param").hash;
-            const { provider, contract } = await loadContract();
-
-            const txReceipt = await provider.getTransactionReceipt(hash);
-            if (!txReceipt) {
-                return c.json({
-                    type: "not_found",
-                    code: "certificate_not_found",
-                    message: "The requested certificate could not be found",
-                }, 404);
-            }
-            // Get block timestamp
-            const block = await provider.getBlock(txReceipt.blockNumber);
-            const timestamp = block.timestamp;
-
-            for (const log of txReceipt.logs) {
-                try {
-                  const parseLog = contract.interface.parseLog(log);
-                  if (parseLog && parseLog.name === "CertificateMinted") {
-                    console.log("name:", parseLog.args.name);
-                    console.log("id:", parseLog.args.documentIdentification);
-                    console.log("course:", parseLog.args.course);
-                    console.log("description:", parseLog.args.description);
-                    console.log("timestamp:", timestamp);
-                    break;
-                  }
-                } catch (error) {
-                  console.error("Error parsing log:", error);
-                }
-              }
-            // const mappedResponse = mapResponse(parseLog);
-            // mappedResponse.hash = hash;
-            return c.json({ data: "parseLog" }, 200)
+            processTransaction(hash);
+            return c.json({ data: "Revise la consola" }, 200)
         })
     .get("/id/:id",
         describeRoute({
@@ -161,4 +131,35 @@ export const certificate = new Hono()
             mappedResponse.id = id.toString();
             console.log(mappedResponse);
             return c.json({ data: mappedResponse }, 200)
+        })
+    .get('/migrate',
+        describeRoute(
+            {
+                tags: ["Certificate"],
+                summary: "Migrar los certificados a la blockan desde el csv",
+                description: "Genera un json con los datos de los certificados migrados",
+                responses: {
+                    200: {
+                        content: {
+                            "application/json": {
+                                schema: resolver(z.object({
+                                    data: Certificate.InfoSchema.array().openapi({
+                                        description: "Información del certificado",
+                                        example: [Examples.Certificate]
+                                    })
+                                })),
+                                example: {
+                                    data: [Examples.Certificate]
+                                }
+                            }
+                        },
+                        description: "Información del certificado",
+                    },
+                    500: ErrorResponses[500],
+                }
+            }
+        ),
+        async (c) => {
+            RunMigration2();
+            return c.json({ data: "Revise el procesamiento de migración en la consola" }, 200)
         })

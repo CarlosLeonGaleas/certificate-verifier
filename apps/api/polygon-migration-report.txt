@@ -1,0 +1,69 @@
+
+🎯 POLYGON MAINNET MIGRATION REPORT
+=====================================
+Total certificates processed: 2
+✅ Successfully issued: 2
+❌ Failed: 0
+⛽ Total gas used: 1323424
+📊 Average gas per certificate: 661712
+
+SUCCESSFUL CERTIFICATES:
+- Zambrano Vizuete Óscar Marcelo (1709989907)
+    TX:  0xca5d982d398a606d007b6a6fa0cce379a7286f37c181cea45316fabf826b32e4
+    Gas: 670244
+    Timestamp: 2025-07-14T20:08:36.902Z
+- Ramón Jaramillo Edwin Vinicio (1707982904)
+    TX:  0xb9b2b8b30549a3bd6ca43760cd8e08e2622254cd2ec4a4526c6492ad1b0230c6
+    Gas: 653180
+    Timestamp: 2025-07-14T20:08:45.926Z
+
+-----------------------------------------------------------------
+--  SQL para insertar estos certificados en "certificates_new"
+-----------------------------------------------------------------
+INSERT INTO certificates_new
+  (name, document_id, course, description, institution, area,
+   start_date, end_date, issued_date, hours_worked,
+   signatory_name, issued_at, token_id, tx_hash, contract_id)
+VALUES
+(
+  'Zambrano Vizuete Óscar Marcelo',
+  '1709989907',
+  'CURSO|Desarrollo de Habilidades de Comunicación en Público|BACKGROUND004',
+  'Por haber aprobado el curso ''Desarrollo de Habilidades de Comunicación en Público'', realizado del 07 al 11 de abril del 2025 con una duración de 20 horas.',
+  'Instituto Tecnológico Superior Rumiñahui',
+  'Investigación',
+  '07/04/2025',
+  '11/04/2025',
+  'Sangolquí, 14 de julio del 2025',
+   20,                              -- INT
+  'Mg. Edwin Ramón',
+  '2025-07-14T20:08:36.902Z',                                -- TIMESTAMPTZ (ISO‑8601)
+  '194',
+  '0xca5d982d398a606d007b6a6fa0cce379a7286f37c181cea45316fabf826b32e4',
+   1                                -- INT (FK)
+),
+(
+  'Ramón Jaramillo Edwin Vinicio',
+  '1707982904',
+  'CURSO|Desarrollo de Habilidades de Comunicación en Público|BACKGROUND005',
+  'Por haber dictado el curso ''Desarrollo de Habilidades de Comunicación en Público'', realizado del 07 al 11 de abril del 2025 con una duración de 20 horas.',
+  'Instituto Tecnológico Superior Rumiñahui',
+  'Investigación',
+  '07/04/2025',
+  '11/04/2025',
+  'Sangolquí, 14 de julio del 2025',
+   20,                              -- INT
+  'PhD. Marcelo Zambrano',
+  '2025-07-14T20:08:45.926Z',                                -- TIMESTAMPTZ (ISO‑8601)
+  '195',
+  '0xb9b2b8b30549a3bd6ca43760cd8e08e2622254cd2ec4a4526c6492ad1b0230c6',
+   1                                -- INT (FK)
+)
+;
+
+
+
+⚠️ IMPORTANT NOTES:
+- All transactions can be viewed on PolygonScan
+- Failed transactions may need manual retry with higher gas
+- Consider running failed certificates separately

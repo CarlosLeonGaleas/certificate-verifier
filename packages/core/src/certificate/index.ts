@@ -77,5 +77,5 @@ export namespace Certificate {
         hash: z.string(),
     })
     export type InfoType = z.infer<typeof InfoSchema>
-
+    
 }
