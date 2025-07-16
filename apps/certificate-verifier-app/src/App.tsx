@@ -6,6 +6,7 @@ import HomePage from './components/HomePage'
 import HashVerifierPage from './components/HashVerifierPage'
 import IdVerifierPage from './components/IdVerifierPage'
 import StepLoader from './components/StepLoader'
+import DocumentIdPage from './components/DocumentIdPage'
 
 function App() {
   const [openOptions, setOpenOptions] = useState(true) // true = Drawer expandido
@@ -47,7 +48,8 @@ function App() {
               <Route path="/hash" element={<HashVerifierPage />} />
               <Route path="/id" element={<IdVerifierPage />} />
               <Route path="/id/:tokenId" element={<IdVerifierPage />} />
-              <Route path="/ci" element={<HashVerifierPage />} />
+              <Route path="/documentId" element={<DocumentIdPage />} />
+              <Route path="/documentId/:documentId" element={<DocumentIdPage />} />
               <Route path="/institution" element={<HashVerifierPage />} />
               <Route path="/loader" element={<StepLoader finalSuccess={false}/>} />
             </Routes>

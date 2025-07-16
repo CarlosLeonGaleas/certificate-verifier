@@ -31,20 +31,40 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   return (
     <div style={{ width: '75%', marginTop: '2rem', backgroundColor: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
       <h2 style={{ textAlign: 'center' }}>Certificado Encontrado en la Blockchain</h2>
-      <p>🆔 <strong>ID del Certificado:</strong> {tokenId}</p>
-      <p>😎 <strong>Beneficiario:</strong> {name}</p>
-      <p>🪪 <strong>Cédula del Beneficiario:</strong> {documentId}</p>
-      <p>🪧 <strong>Título del Certificado:</strong> {getTitleValue(course)}</p>
-      <p>📋 <strong>Descripción:</strong> {description}</p>
-      <p>🏫 <strong>Institución emisora:</strong> {institution}</p>
-      <p>🏠 <strong>Área emisora:</strong> {area}</p>
-      <p>⛓️ <strong>Registro en la Blockchain:</strong> {issueAt}</p>
-      <p>📅 <strong>Lugar y fecha de emisión:</strong> {issuedDate}</p>
-      <p>📆 <strong>Fecha de Inicio:</strong> {startDate}</p>
-      <p>📆 <strong>Fecha de Fin:</strong> {endDate}</p>
-      <p>⏳ <strong>Horas:</strong> {hoursWorked}</p>
-      <p>🔒 <strong>Hash:</strong> {hash}</p>
-      <p>✍️ <strong>Firmantes:</strong> {replacePipeWithComma(signatoryName)}</p>
+      {tokenId && <p>🆔 <strong>ID del Certificado:</strong> {tokenId}</p>}
+      {name && <p>😎 <strong>Beneficiario:</strong> {name}</p>}
+      {documentId && <p>🪪 <strong>Cédula del Beneficiario:</strong> {documentId}</p>}
+      {course && (
+        <p>
+          🪧 <strong>Título del Certificado:</strong>{' '}
+          {getTitleValue(course)}
+        </p>
+      )}
+      {description && <p>📋 <strong>Descripción:</strong> {description}</p>}
+      {institution && <p>🏫 <strong>Institución emisora:</strong> {institution}</p>}
+      {area && <p>🏠 <strong>Área emisora:</strong> {area}</p>}
+      {issueAt && (
+        <p>
+          ⛓️ <strong>Registro en la Blockchain:</strong>{' '}
+          {issueAt}
+        </p>
+      )}
+      {issuedDate && (
+        <p>
+          📅 <strong>Lugar y fecha de emisión:</strong>{' '}
+          {issuedDate}
+        </p>
+      )}
+      {startDate && <p>📆 <strong>Fecha de Inicio:</strong> {startDate}</p>}
+      {endDate && <p>📆 <strong>Fecha de Fin:</strong> {endDate}</p>}
+      {hoursWorked && <p>⏳ <strong>Horas:</strong> {hoursWorked}</p>}
+      {hash && <p>🔒 <strong>Hash:</strong> {hash}</p>}
+      {signatoryName && (
+        <p>
+          ✍️ <strong>Firmantes:</strong>{' '}
+          {replacePipeWithComma(signatoryName)}
+        </p>
+      )}
     </div>
   );
 };

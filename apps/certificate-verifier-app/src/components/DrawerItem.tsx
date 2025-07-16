@@ -14,7 +14,7 @@ function handleRoute(option: string): string {
     case 'Id':
       return '/id';
     case 'Cédula de Identidad':
-      return '/ci';
+      return '/documentId';
     case 'Institución':
       return '/institution';
     default:

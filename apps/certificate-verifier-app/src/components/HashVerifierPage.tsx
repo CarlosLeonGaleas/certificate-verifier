@@ -35,7 +35,7 @@ const verifyCertificate = async (hash: string = ''): Promise<Certificate.InfoTyp
     }
 }
 
-const HomePage: React.FC = () => {
+const HashVerifierPage: React.FC = () => {
     const { hash: routeId } = useParams<{ hash?: string }>();
     const [hash, setHash] = useState<string | ''>("");
     const [certificateFound, setCertificateFound] = useState<boolean>(true);
@@ -160,4 +160,4 @@ const HomePage: React.FC = () => {
     );
 };
 
-export default HomePage;
+export default HashVerifierPage;

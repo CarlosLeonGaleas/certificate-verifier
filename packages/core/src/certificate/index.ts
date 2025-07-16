@@ -197,7 +197,69 @@ export namespace Certificate {
             "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
             "stateMutability": "view",
             "type": "function"
+        },
+        {
+            "inputs": [{ "internalType": "string", "name": "_documentId", "type": "string" }],
+            "name": "getCertificateCountByDocumentId",
+            "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [{ "internalType": "string", "name": "_documentId", "type": "string" }],
+            "name": "getCertificatesByDocumentId",
+            "outputs": [
+                {
+                    "components": [
+                        { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+                        { "internalType": "string", "name": "name", "type": "string" },
+                        { "internalType": "string", "name": "documentId", "type": "string" },
+                        { "internalType": "string", "name": "course", "type": "string" },
+                        { "internalType": "string", "name": "description", "type": "string" },
+                        { "internalType": "string", "name": "institution", "type": "string" },
+                        { "internalType": "string", "name": "area", "type": "string" },
+                        { "internalType": "string", "name": "issuedDate", "type": "string" },
+                        { "internalType": "string", "name": "startDate", "type": "string" },
+                        { "internalType": "string", "name": "endDate", "type": "string" },
+                        { "internalType": "uint256", "name": "hoursWorked", "type": "uint256" },
+                        { "internalType": "string", "name": "signatoryName", "type": "string" }
+                    ],
+                    "internalType": "struct CertificateInfo[]",
+                    "name": "",
+                    "type": "tuple[]"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [{ "internalType": "string", "name": "_documentId", "type": "string" }],
+            "name": "getAllCertificatesByDocumentId",
+            "outputs": [
+                {
+                    "components": [
+                        { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+                        { "internalType": "string", "name": "name", "type": "string" },
+                        { "internalType": "string", "name": "documentId", "type": "string" },
+                        { "internalType": "string", "name": "course", "type": "string" },
+                        { "internalType": "string", "name": "description", "type": "string" },
+                        { "internalType": "string", "name": "institution", "type": "string" },
+                        { "internalType": "string", "name": "area", "type": "string" },
+                        { "internalType": "string", "name": "issuedDate", "type": "string" },
+                        { "internalType": "string", "name": "startDate", "type": "string" },
+                        { "internalType": "string", "name": "endDate", "type": "string" },
+                        { "internalType": "uint256", "name": "hoursWorked", "type": "uint256" },
+                        { "internalType": "string", "name": "signatoryName", "type": "string" }
+                    ],
+                    "internalType": "struct AcademicCertificateNew.CertificateInfo[]",
+                    "name": "certificates",
+                    "type": "tuple[]"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
         }
+
     ] as const;
 
     export class CertificateRetriever {
@@ -559,6 +621,65 @@ export namespace Certificate {
         //         throw error;
         //     }
         // }
+
+        async getCertificatesCountFromDocumentId(documentId: string | number): Promise<number> {
+            try {
+                console.log(`\n📋 Counting the certificates for Document ID: ${documentId}`);
+
+                const count = await this.contract.getCertificateCountByDocumentId(documentId);
+                console.log("✅ Certificates count:", count.toString());
+
+                return parseInt(count.toString());
+            } catch (error) {
+                console.error(`❌ Error getting certificate count for Document ID:`, (error as Error).message);
+                throw error;
+            }
+        }
+
+
+        async getCertificateDataFromDocumentId(documentId: string | number): Promise<CertificateMetadata> {
+            try {
+                console.log(`\n📋 Retrieving complete certificates data for Document Id: ${documentId}`);
+
+                // Call the contract function to get all metadata certificates for Document Id
+                const certificatesData = await this.contract.getAllCertificatesByDocumentId(documentId);
+                console.log("Certificates:", certificatesData);
+
+                // Structure the complete certificate data
+                // const certificateData: CertificateMetadata = {
+                //     tokenId: metadata[0],
+                //     name: metadata[1],
+                //     documentId: documentId.toString(),
+                //     course: metadata[2],
+                //     description: metadata[3],
+                //     institution: metadata[4],
+                //     area: metadata[5],
+                //     issuedDate: metadata[6],
+                //     startDate: metadata[7],
+                //     endDate: metadata[8],
+                //     hoursWorked: metadata[9].toString(),
+                //     signatoryName: metadata[10]
+                // };
+
+                // console.log(`✅ Complete certificate data retrieved:`);
+                // console.log(`   Name: ${certificateData.name}`);
+                // console.log(`   Document ID: ${certificateData.documentId}`);
+                // console.log(`   Course: ${certificateData.course}`);
+                // console.log(`   Description: ${certificateData.description}`);
+                // console.log(`   Institution: ${certificateData.institution}`);
+                // console.log(`   Area: ${certificateData.area}`);
+                // console.log(`   Issued Date: ${certificateData.issuedDate}`);
+                // console.log(`   Study Period: ${certificateData.startDate} - ${certificateData.endDate}`);
+                // console.log(`   Hours Worked: ${certificateData.hoursWorked}`);
+                // console.log(`   Signatory: ${certificateData.signatoryName}`);
+
+                return certificatesData;
+
+            } catch (error) {
+                console.error(`❌ Error getting certificates data for Document ID:`, (error as Error).message);
+                throw error;
+            }
+        }
 
         /**
          * Verify certificate using the retrieved data
