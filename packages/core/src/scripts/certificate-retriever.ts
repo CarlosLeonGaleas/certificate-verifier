@@ -2,13 +2,6 @@ import { ethers } from "ethers";
 import { Config } from "@certificate-verifier/core"
 import * as fs from "fs";
 
-// Interfaces and Types
-interface Config {
-    CONTRACT_ADDRESS: string;
-    API_NETWORK_URL: string;
-    PRIVATE_KEY: string;
-}
-
 interface CertificateEventArgs {
     tokenId: bigint;
     studentHash: string;

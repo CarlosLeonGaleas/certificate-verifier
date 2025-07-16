@@ -1,6 +1,6 @@
 // import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { Certificate, Examples, loadAcademicCertificateI_ABI, Config, CertificateRetriever, processTransaction, getDataFromTokenId, processBatchTransactions, RunMigration, RunMigration2 } from "@certificate-verifier/core"
+import { Certificate, Examples, loadAcademicCertificateI_ABI, Config, processTransaction } from "@certificate-verifier/core"
 import { JsonRpcProvider, Contract } from "ethers";
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
@@ -33,8 +33,8 @@ const mapResponse = (data: { [key: string]: string }): Certificate.InfoType => {
         second: "2-digit",
     });
     return {
-        id: 'N/A', // no viene en la respuesta
-        documentIdentification: data["1"] ?? '',
+        tokenId: 'N/A', // no viene en la respuesta
+        documentId: data["1"] ?? '',
         name: data["0"] ?? '',
         course: data["2"] ?? '',
         description: data["3"] ?? '',
@@ -43,7 +43,7 @@ const mapResponse = (data: { [key: string]: string }): Certificate.InfoType => {
         issueAt: issuedAtFormated ?? '',
         startDate: data["6"] ?? '',
         endDate: '',
-        issueDate: data["7"] ?? '',
+        issuedDate: data["7"] ?? '',
         hoursWorked: parseInt(data["8"] ?? '0', 10),
         signatoryName: data["9"] ?? '',
         hash: 'N/A' // campo faltante
@@ -81,14 +81,25 @@ export const certificate = new Hono()
         validator("param", Certificate.InfoSchema.pick({ hash: true })),
         async (c) => {
             const hash = c.req.valid("param").hash;
-            processTransaction(hash);
-            return c.json({ data: "Revise la consola" }, 200)
+            const retriever = new Certificate.CertificateRetriever();
+
+            const certificateData = await retriever.getCompleteInfoFromTxHash(hash);
+
+            if (!certificateData) {
+                return c.json({
+                    type: "not_found",
+                    code: "certificate_not_found",
+                    message: "The requested certificate could not be found",
+                }, 404);
+            };
+            
+            return c.json({ data: certificateData }, 200)
         })
-    .get("/id/:id",
+    .get("/id/:tokenId",
         describeRoute({
             tags: ["Certificate"],
-            summary: "Obtener certificado por ID",
-            description: "Recupera un certificado específico por su ID.",
+            summary: "Obtener certificado por Token ID",
+            description: "Recupera un certificado específico por su Token ID.",
             responses: {
                 200: {
                     description: "Respuesta exitosa",
@@ -106,60 +117,51 @@ export const certificate = new Hono()
                 500: ErrorResponses[500],
             }
         }),
-        validator("param", Certificate.InfoSchema.pick({ id: true })),
+        validator("param", Certificate.InfoSchema.pick({ tokenId: true })),
         async (c) => {
-            const id = c.req.valid("param").id;
-            const { contract } = await loadContract();
-            const certificate = await contract.getCertificateMetadata(id);
-            console.log(certificate);
+            const tokenId = c.req.valid("param").tokenId;
+            const retriever = new Certificate.CertificateRetriever();
 
-            if (!certificate) {
+            const certificateData = await retriever.getCertificateData(tokenId);
+
+            if (!certificateData) {
                 return c.json({
                     type: "not_found",
                     code: "certificate_not_found",
                     message: "The requested certificate could not be found",
                 }, 404);
             }
-            // Convertir cualquier campo que pueda ser BigInt (por precaución)
-            const certificateSanitized = Object.fromEntries(
-                Object.entries(certificate).map(([key, value]) => [
-                    key,
-                    typeof value === "bigint" ? value.toString() : value,
-                ])
-            );
-            const mappedResponse = mapResponse(certificateSanitized);
-            mappedResponse.id = id.toString();
-            console.log(mappedResponse);
-            return c.json({ data: mappedResponse }, 200)
+
+            return c.json({ data: certificateData }, 200)
         })
-    .get('/migrate',
-        describeRoute(
-            {
-                tags: ["Certificate"],
-                summary: "Migrar los certificados a la blockan desde el csv",
-                description: "Genera un json con los datos de los certificados migrados",
-                responses: {
-                    200: {
-                        content: {
-                            "application/json": {
-                                schema: resolver(z.object({
-                                    data: Certificate.InfoSchema.array().openapi({
-                                        description: "Información del certificado",
-                                        example: [Examples.Certificate]
-                                    })
-                                })),
-                                example: {
-                                    data: [Examples.Certificate]
-                                }
-                            }
-                        },
-                        description: "Información del certificado",
-                    },
-                    500: ErrorResponses[500],
-                }
-            }
-        ),
-        async (c) => {
-            RunMigration2();
-            return c.json({ data: "Revise el procesamiento de migración en la consola" }, 200)
-        })
+    // .get('/migrate',
+    //     describeRoute(
+    //         {
+    //             tags: ["Certificate"],
+    //             summary: "Migrar los certificados a la blockan desde el csv",
+    //             description: "Genera un json con los datos de los certificados migrados",
+    //             responses: {
+    //                 200: {
+    //                     content: {
+    //                         "application/json": {
+    //                             schema: resolver(z.object({
+    //                                 data: Certificate.InfoSchema.array().openapi({
+    //                                     description: "Información del certificado",
+    //                                     example: [Examples.Certificate]
+    //                                 })
+    //                             })),
+    //                             example: {
+    //                                 data: [Examples.Certificate]
+    //                             }
+    //                         }
+    //                     },
+    //                     description: "Información del certificado",
+    //                 },
+    //                 500: ErrorResponses[500],
+    //             }
+    //         }
+    //     ),
+    //     async (c) => {
+    //         RunMigration2();
+    //         return c.json({ data: "Revise el procesamiento de migración en la consola" }, 200)
+    //     })

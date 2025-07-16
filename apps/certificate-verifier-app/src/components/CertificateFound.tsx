@@ -12,8 +12,8 @@ const replacePipeWithComma = (value: string): string => {
 };
 
 const CertificateFound: React.FC<Certificate.InfoType> = ({
-  id,
-  documentIdentification,
+  tokenId,
+  documentId,
   name,
   course,
   description,
@@ -22,7 +22,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   issueAt,
   startDate,
   endDate,
-  issueDate,
+  issuedDate,
   hoursWorked,
   signatoryName,
   hash,
@@ -31,15 +31,15 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   return (
     <div style={{ width: '75%', marginTop: '2rem', backgroundColor: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
       <h2 style={{ textAlign: 'center' }}>Certificado Encontrado en la Blockchain</h2>
-      <p>🆔 <strong>ID del Certificado:</strong> {id}</p>
+      <p>🆔 <strong>ID del Certificado:</strong> {tokenId}</p>
       <p>😎 <strong>Beneficiario:</strong> {name}</p>
-      <p>🪪 <strong>Cédula del Beneficiario:</strong> {documentIdentification}</p>
+      <p>🪪 <strong>Cédula del Beneficiario:</strong> {documentId}</p>
       <p>🪧 <strong>Título del Certificado:</strong> {getTitleValue(course)}</p>
       <p>📋 <strong>Descripción:</strong> {description}</p>
       <p>🏫 <strong>Institución emisora:</strong> {institution}</p>
       <p>🏠 <strong>Área emisora:</strong> {area}</p>
       <p>⛓️ <strong>Registro en la Blockchain:</strong> {issueAt}</p>
-      <p>📅 <strong>Lugar y fecha de emisión:</strong> {issueDate}</p>
+      <p>📅 <strong>Lugar y fecha de emisión:</strong> {issuedDate}</p>
       <p>📆 <strong>Fecha de Inicio:</strong> {startDate}</p>
       <p>📆 <strong>Fecha de Fin:</strong> {endDate}</p>
       <p>⏳ <strong>Horas:</strong> {hoursWorked}</p>

@@ -36,7 +36,7 @@ const verifyCertificate = async (id: number = 0): Promise<Certificate.InfoType |
 }
 
 const HomePage: React.FC = () => {
-    const { id: routeId } = useParams<{ id?: string }>();
+    const { tokenId: routeId } = useParams<{ tokenId?: string }>();
     const [id, setId] = useState<number | ''>(0);
     const [certificateFound, setCertificateFound] = useState<boolean>(true);
     const [certificateData, setCertificateData] = useState<Certificate.InfoType | null>(null);
