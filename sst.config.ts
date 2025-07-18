@@ -9,5 +9,20 @@ export default $config({
       home: "aws",
     };
   },
-  async run() {},
+  async run() {
+
+    const api = new sst.aws.Function("api",{
+      handler: "apps/api/handler.handler",
+      url: true,
+      environment: {
+        API_NETWORK_URL: process.env.API_NETWORK_URL as string,
+        CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS as string,
+        PRIVATE_KEY: process.env.PRIVATE_KEY as string,
+      }
+    })
+
+    return {
+      api: api.url
+    }
+  },
 });

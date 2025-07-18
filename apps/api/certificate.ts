@@ -1,23 +1,10 @@
 // import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { Certificate, Examples, loadAcademicCertificateI_ABI, Config, processTransaction } from "@certificate-verifier/core"
-import { JsonRpcProvider, Contract } from "ethers";
+import { Certificate, Examples } from "@certificate-verifier/core"
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
 import { z } from 'zod';
 import { ErrorResponses, validator } from './common';
-
-async function loadContract() {
-    const provider = new JsonRpcProvider(Config.API_NETWORK_URL);
-    const ABI = await loadAcademicCertificateI_ABI();
-    let contract = null;
-    try {
-        contract = new Contract(Config.CONTRACT_ADDRESS, ABI, provider);
-    } catch (e) {
-        console.error('Error en llamada a contrato:', e);
-    }
-    return { provider, ABI, contract }
-}
 
 function stringifyBigInts(obj: any): any {
     if (typeof obj === 'bigint') {
@@ -33,38 +20,6 @@ function stringifyBigInts(obj: any): any {
     }
     return obj;
 }
-
-
-const mapResponse = (data: { [key: string]: string }): Certificate.InfoType => {
-    const issuedAtData = data["5"];
-    console.log("issuedAtData NETO:", issuedAtData);
-    //const issuedAtFormated = new Date(issuedAtData * 1000).toISOString();
-    const issuedAtFormated = new Date(Number(issuedAtData) * 1000).toLocaleString("es-EC", {
-        timeZone: "America/Guayaquil",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-    });
-    return {
-        tokenId: 'N/A', // no viene en la respuesta
-        documentId: data["1"] ?? '',
-        name: data["0"] ?? '',
-        course: data["2"] ?? '',
-        description: data["3"] ?? '',
-        institution: data["4"] ?? '',
-        area: '', // campo faltante
-        issueAt: issuedAtFormated ?? '',
-        startDate: data["6"] ?? '',
-        endDate: '',
-        issuedDate: data["7"] ?? '',
-        hoursWorked: parseInt(data["8"] ?? '0', 10),
-        signatoryName: data["9"] ?? '',
-        hash: 'N/A' // campo faltante
-    };
-};
 
 export const certificate = new Hono()
     .get('/hash/:hash',

@@ -179,3 +179,4 @@ packages/core/src/shared/config.ts
 
 # sst
 .sst
+env.sh
