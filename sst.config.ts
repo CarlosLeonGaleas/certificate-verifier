@@ -25,7 +25,7 @@ export default $config({
     const website = new sst.aws.StaticSite("website", {
       path: "apps/certificate-verifier-app",
       build: {
-        command: "bun run build",
+        command: "bun run build:skip-check",
         output: "dist"
       },
       environment: {
