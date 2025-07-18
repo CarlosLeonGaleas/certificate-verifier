@@ -176,3 +176,6 @@ dist
 
 
 packages/core/src/shared/config.ts
+
+# sst
+.sst
