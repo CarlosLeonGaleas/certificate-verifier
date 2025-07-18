@@ -21,12 +21,27 @@ export default $config({
       }
     })
 
-    // const website = new sst.StaticSite("website",{
-      
-    // })
+    // Deploy del frontend
+    const website = new sst.aws.StaticSite("website", {
+      path: "apps/certificate-verifier-app",
+      build: {
+        command: "bun run build",
+        output: "dist"
+      },
+      environment: {
+        // Variables de entorno que se inyectan en build time
+        VITE_API_BACKEND_URL_BASE: $interpolate`${api.url}/api`,
+      },
+      // domain: {
+        // Opcional: si quieres un dominio personalizado
+        // name: "certificate-verifier.tudominio.com",
+        // redirects: ["www.certificate-verifier.tudominio.com"]
+      // }
+    });
 
     return {
-      api: api.url
+      api: api.url,
+      website: website.url
     }
   },
 });
