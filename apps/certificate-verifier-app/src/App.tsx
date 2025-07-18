@@ -37,10 +37,11 @@ function App() {
               flexGrow: 1,
               backgroundColor: '#f0f0f0',
               marginTop: `${appBarHeight}px`,
-              // height: `calc(100vh - ${appBarHeight}px)`,
-              // width: `calc(100vh - ${drawerWidth}px)`
-              height: `100%`,
-              width: `100%`
+              height: 'auto',
+              overflow: 'auto',
+              width: '100%',
+              minHeight: `calc(100vh - ${appBarHeight}px)`, // Asegura que siempre tenga al menos esta altura
+              maxHeight: '100%'
             }}
           >
             <Routes>
