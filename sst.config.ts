@@ -21,6 +21,10 @@ export default $config({
       }
     })
 
+    // const website = new sst.StaticSite("website",{
+      
+    // })
+
     return {
       api: api.url
     }

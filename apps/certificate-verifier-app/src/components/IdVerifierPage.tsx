@@ -9,12 +9,10 @@ import StepLoader from './StepLoader';
 import { Certificate } from "@certificate-verifier/core"
 
 const url_backend_api = import.meta.env.VITE_API_BACKEND_URL_BASE;
-const BEARER_TOKEN = import.meta.env.VITE_BEARER_TOKEN;
 
 const getHeaders = () => {
     return {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${BEARER_TOKEN}`,
     };
 };
 
@@ -26,8 +24,24 @@ const verifyCertificate = async (id: number = 0): Promise<Certificate.InfoType |
             method: 'GET',
             headers: getHeaders(),
         });
-        const datos: { data: Certificate.InfoType } = await response.json();
-        return datos.data;
+        
+        if (!response.ok) {
+            console.error('Error en la respuesta:', response.status, response.statusText);
+            return null;
+        }
+
+        // Verificar que la respuesta sea JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+            console.error('La respuesta no es JSON');
+            return null;
+        }
+
+        // Parsear la respuesta
+        const responseData: { data: Certificate.InfoType } = await response.json();
+        
+        // Tu backend devuelve { data: Certificate.InfoType }
+        return responseData.data;
 
     } catch (error) {
         console.error("Error al verificar el certificado:", error);

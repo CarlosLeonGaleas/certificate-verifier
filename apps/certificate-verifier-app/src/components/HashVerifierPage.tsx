@@ -9,12 +9,10 @@ import StepLoader from './StepLoader';
 import { Certificate } from "@certificate-verifier/core"
 
 const url_backend_api = import.meta.env.VITE_API_BACKEND_URL_BASE;
-const BEARER_TOKEN = import.meta.env.VITE_BEARER_TOKEN;
 
 const getHeaders = () => {
     return {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${BEARER_TOKEN}`,
     };
 };
 

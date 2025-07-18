@@ -8,9 +8,10 @@ import { cors } from 'hono/cors';
 
 const app = new Hono();
 
-const routes = app.use(cors({
-    origin: '*'
-}))
+// Removida la configuración de CORS - AWS Lambda Function URLs lo maneja automáticamente
+// app.use('*', cors({ origin: '*' }))
+
+app
     .route("/api/certificate", certificate)
     .get(
         '/openapi',
@@ -61,6 +62,6 @@ const routes = app.use(cors({
     });
 
 
-export type ApiType = typeof routes;
+export type ApiType = typeof app;
 
-export default routes;
+export default app;
