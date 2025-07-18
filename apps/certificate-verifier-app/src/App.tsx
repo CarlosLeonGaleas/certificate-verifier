@@ -51,7 +51,7 @@ function App() {
               <Route path="/id/:tokenId" element={<IdVerifierPage />} />
               <Route path="/documentId" element={<DocumentIdPage />} />
               <Route path="/documentId/:documentId" element={<DocumentIdPage />} />
-              <Route path="/institution" element={<HashVerifierPage />} />
+              <Route path="/institution" element={<HomePage />} />
               <Route path="/loader" element={<StepLoader finalSuccess={false}/>} />
             </Routes>
           </main>

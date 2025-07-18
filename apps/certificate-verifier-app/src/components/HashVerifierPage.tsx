@@ -107,7 +107,7 @@ const HashVerifierPage: React.FC = () => {
                             {certificateData ? (
                                 <CertificateFound {...certificateData} />
                             ) : (
-                                <CertificateNotFound />
+                                <CertificateNotFound message= 'El certificado asociado a ese hash no existe'/>
                             )}
                         </div>
                     )}
@@ -119,41 +119,52 @@ const HashVerifierPage: React.FC = () => {
     };
 
     return (
-        <div style={{ backgroundColor: '#e3f2fd', height: '100%', width: '100%' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: 'auto', padding: '20px' }}>
-                <h2>VERIFIQUE INFORMACIÓN DEL CERTIFICADO</h2>
-                <div style={{ width: '38%', marginBottom: '20px' }} >
-                    <TextField
-                        id="outlined-textarea"
-                        label="Ingrese el Hash:"
-                        placeholder="0x581f94124cd4c8df75ff0dfa80be005x7b129073xd44d7ee3x0x675004f21583"
-                        type="number"
-                        slotProps={{
-                            inputLabel: {
-                                shrink: true,
+        <div style={{ backgroundColor: '#e3f2fd', height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h2>VERIFICAR INFORMACIÓN DEL CERTIFICADO</h2>
+            <div style={{ width: '37%', marginBottom: '20px', display: 'flex', justifyContent: 'center' }} >
+                <TextField
+                    id="outlined-textarea"
+                    label="Hash de la transacción:"
+                    placeholder="0x581f94124cd4c8df75ff0dfa80be005x7b129073xd44d7ee3x0x675004f21583"
+                    type="number"
+                    value={hash ?? ''}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setHash(value);
+                    }}
+                    multiline
+                    fullWidth
+                    slotProps={{
+                        input: {
+                        sx: {
+                            backgroundColor: 'white',
+                            '& input[type=number]': {
+                                MozAppearance: 'textfield',
                             },
-                        }}
-                        value={hash ?? ''}
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            setHash(value);
-                        }}
-                        multiline
-                        fullWidth
-                        disabled={isSearching}
-                    />
-                </div>
+                            '& input[type=number]::-webkit-outer-spin-button': {
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                            },
+                            '& input[type=number]::-webkit-inner-spin-button': {
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                                },
+                            },
+                        }
+                    }}
+                    disabled={isSearching}
+                />
+            </div>
             <Button
                 variant="contained"
                 onClick={() => handleVerifyCertificate(hash)}
                 endIcon={<SearchIcon />}
-                disabled={isSearching}
+                disabled={isSearching || !hash}
             >
-                {isSearching ? 'Buscando...' : 'Buscar Certificado'}
+                {isSearching ? 'Validando...' : 'Validar'}
             </Button>
 
             {renderContent()}
-        </div>
         </div >
     );
 };

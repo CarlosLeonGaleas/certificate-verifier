@@ -24,7 +24,7 @@ const verifyCertificate = async (id: number = 0): Promise<Certificate.InfoType |
             method: 'GET',
             headers: getHeaders(),
         });
-        
+
         if (!response.ok) {
             console.error('Error en la respuesta:', response.status, response.statusText);
             return null;
@@ -39,7 +39,7 @@ const verifyCertificate = async (id: number = 0): Promise<Certificate.InfoType |
 
         // Parsear la respuesta
         const responseData: { data: Certificate.InfoType } = await response.json();
-        
+
         // Tu backend devuelve { data: Certificate.InfoType }
         return responseData.data;
 
@@ -51,7 +51,7 @@ const verifyCertificate = async (id: number = 0): Promise<Certificate.InfoType |
 
 const IdVerifierPage: React.FC = () => {
     const { tokenId: routeId } = useParams<{ tokenId?: string }>();
-    const [id, setId] = useState<number | ''>(0);
+    const [id, setId] = useState<number | ''>('');
     const [certificateFound, setCertificateFound] = useState<boolean>(true);
     const [certificateData, setCertificateData] = useState<Certificate.InfoType | null>(null);
     const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -124,7 +124,7 @@ const IdVerifierPage: React.FC = () => {
                             {certificateData ? (
                                 <CertificateFound {...certificateData} />
                             ) : (
-                                <CertificateNotFound />
+                                <CertificateNotFound message= {'El certificado ' + id + ' no existe'} />
                             )}
                         </div>
                     )}
@@ -136,41 +136,53 @@ const IdVerifierPage: React.FC = () => {
     };
 
     return (
-        <div style={{ backgroundColor: '#e3f2fd', height: '100%', width: '100%' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: 'auto', padding: '20px' }}>
-                <h2>VERIFIQUE INFORMACIÓN DEL CERTIFICADO</h2>
-                <div style={{ width: '20%', marginBottom: '20px' }} >
-                    <TextField
-                        id="outlined-textarea"
-                        label="Ingrese el Token ID:"
-                        placeholder="0"
-                        type="number"
-                        slotProps={{
-                            inputLabel: {
-                                shrink: true,
+        <div style={{ backgroundColor: '#e3f2fd', height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h2>VERIFICAR INFORMACIÓN DEL CERTIFICADO</h2>
+            <div style={{ width: '100%', marginBottom: '20px', display: 'flex', justifyContent: 'center' }} >
+                <TextField
+                    id="outlined-textarea"
+                    label="Token ID:"
+                    type="number"
+                    value={id ?? ''}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setId(value === '' ? 0 : Number(value));
+                    }}
+                    disabled={isSearching}
+                    slotProps={{
+                        input: {
+                        inputProps: {
+                            inputMode: 'numeric',
+                            pattern: '[0-9]*',
+                        },
+                        sx: {
+                            backgroundColor: 'white',
+                            '& input[type=number]': {
+                                MozAppearance: 'textfield',
                             },
-                        }}
-                        value={id ?? ''}
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            setId(value === '' ? 0 : Number(value));
-                        }}
-                        multiline
-                        fullWidth
-                        disabled={isSearching}
-                    />
-                </div>
+                            '& input[type=number]::-webkit-outer-spin-button': {
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                            },
+                            '& input[type=number]::-webkit-inner-spin-button': {
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                                },
+                            },
+                        }
+                    }}
+                />
+            </div>
             <Button
                 variant="contained"
                 onClick={() => handleVerifyCertificate(Number(id))}
                 endIcon={<SearchIcon />}
-                disabled={isSearching}
+                disabled={isSearching || !id}
             >
-                {isSearching ? 'Buscando...' : 'Buscar Certificado'}
+                {isSearching ? 'Validando...' : 'Validar'}
             </Button>
 
             {renderContent()}
-        </div>
         </div >
     );
 };

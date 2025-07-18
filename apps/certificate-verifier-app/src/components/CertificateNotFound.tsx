@@ -1,15 +1,19 @@
 import React from 'react';
 
-const NotFound = '/vite.svg'
+const NotFound = '/NotFound.svg'
 
-const CertificateNotFound: React.FC = () => {
+interface CertificateNotFoundProps {
+  message?: string;
+}
+
+const CertificateNotFound: React.FC<CertificateNotFoundProps> = ({ message = 'Certificado No Existe' }) => {
   return (
     <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h3>Certificado No Encontrado</h3>
+      <h1>{message}</h1>
       <img 
         src={NotFound} 
-        alt="Certificado no encontrado" 
-        style={{ width: '300px', maxWidth: '100%', marginTop: '1rem' }} 
+        alt="Certificado no existe" 
+        style={{ width: '250px', maxWidth: '100%', marginTop: '1rem' }} 
       />
     </div>
   );

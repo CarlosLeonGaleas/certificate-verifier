@@ -140,7 +140,7 @@ const DocumentIdPage: React.FC = () => {
                                     />
                                 ))
                             ) : (
-                                <CertificateNotFound />
+                                <CertificateNotFound message='No se encontraron certificados'/>
                             )}
 
                         </div>
@@ -153,39 +153,56 @@ const DocumentIdPage: React.FC = () => {
     };
 
     return (
-        <div style={{ backgroundColor: '#e3f2fd', height: '100%', width: '100%' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: 'auto', padding: '20px' }}>
-                <h2>BUSCAR MIS CERTIFICADOS</h2>
-                <div style={{ width: '20%', marginBottom: '20px' }} >
-                    <TextField
-                        id="outlined-textarea"
-                        label="Ingrese su número de cédula:"
-                        placeholder="1010101010"
-                        type="number"
-                        slotProps={{
-                            inputLabel: {
-                                shrink: true,
-                            },
-                        }}
-                        value={documentId ?? ''}
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            setDocumentId(value);
-                        }}
-                        disabled={isSearching}
-                    />
-                </div>
-                <Button
-                    variant="contained"
-                    onClick={() => handleVerifyCertificate(documentId)}
-                    endIcon={<SearchIcon />}
+        <div style={{ backgroundColor: '#e3f2fd', height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h2>BUSCAR MIS CERTIFICADOS</h2>
+            <div style={{
+                width: '100%', marginBottom: '20px', display: 'flex', justifyContent: 'center'
+            }} >
+                <TextField
+                    id="outlined-textarea"
+                    label="Número de cédula:"
+                    placeholder="1010101010"
+                    type="number"
+                    value={documentId ?? ''}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setDocumentId(value);
+                    }}
                     disabled={isSearching}
-                >
-                    {isSearching ? 'Buscando...' : 'Iniciar Búsqueda'}
-                </Button>
-
-                {renderContent()}
+                    slotProps={{
+                        input: {
+                        inputProps: {
+                            inputMode: 'numeric',
+                            pattern: '[0-9]*',
+                        },
+                        sx: {
+                            backgroundColor: 'white',
+                            '& input[type=number]': {
+                                MozAppearance: 'textfield',
+                            },
+                            '& input[type=number]::-webkit-outer-spin-button': {
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                            },
+                            '& input[type=number]::-webkit-inner-spin-button': {
+                                WebkitAppearance: 'none',
+                                margin: 0,
+                                },
+                            },
+                        }
+                    }}
+                />
             </div>
+            <Button
+                variant="contained"
+                onClick={() => handleVerifyCertificate(documentId)}
+                endIcon={<SearchIcon />}
+                disabled={isSearching || !documentId}
+            >
+                {isSearching ? 'Buscando...' : 'Iniciar Búsqueda'}
+            </Button>
+
+            {renderContent()}
         </div >
     );
 };
