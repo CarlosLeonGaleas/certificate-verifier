@@ -47,6 +47,7 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/hash" element={<HashVerifierPage />} />
+              <Route path="/hash/:hash" element={<HashVerifierPage />} />
               <Route path="/id" element={<IdVerifierPage />} />
               <Route path="/id/:tokenId" element={<IdVerifierPage />} />
               <Route path="/documentId" element={<DocumentIdPage />} />
