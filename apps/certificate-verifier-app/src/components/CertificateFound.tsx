@@ -206,7 +206,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
     <Box
       maxWidth="900px"
       mx="auto"
-      mb={10}
+      mt={8}
       bgcolor="background.paper"
       borderRadius={3}
       boxShadow={3}
@@ -307,7 +307,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
               <InfoItem icon={CalendarToday} label="Fecha de Fin" value={endDate} />
             </Grid>
             <Grid item xs={12} md={4}>
-              <InfoItem icon={AccessTime} label="Horas Asignadas" value={hoursWorked} />
+              <InfoItem icon={AccessTime} label="Duración" value={hoursWorked} />
             </Grid>
           </Grid>
         </Box>

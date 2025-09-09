@@ -160,7 +160,7 @@ const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
             }}
           >
             <p>
-              <strong>BUSCAR MIS CERTIFICADOS</strong>
+              <strong>BUSCAR CERTIFICADOS</strong>
             </p>
           </Box>
         )}
