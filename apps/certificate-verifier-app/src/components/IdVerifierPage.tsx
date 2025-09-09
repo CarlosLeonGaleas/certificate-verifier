@@ -124,11 +124,11 @@ const IdVerifierPage: React.FC = () => {
                 )}
                 {/* Mostrar los resultados debajo del loader si ya completó */}
                 {showResults && (
-                    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ marginTop: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         {certificateData ? (
                             <CertificateFound {...certificateData} />
                         ) : (
-                            <CertificateNotFound message={`El certificado ${id} no existe`} />
+                            <CertificateNotFound message={`El Token ID ${id} no existe`} />
                         )}
                     </div>
                 )}
@@ -138,7 +138,7 @@ const IdVerifierPage: React.FC = () => {
 
     return (
         <div style={{ backgroundColor: '#e3f2fd', height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <h2>VERIFICAR INFORMACIÓN DEL CERTIFICADO</h2>
+            <h2>VERIFICAR UN CERTIFICADO</h2>
             <div style={{ width: '100%', marginBottom: '20px', display: 'flex', justifyContent: 'center' }} >
                 <TextField
                     id="outlined-textarea"
@@ -184,8 +184,22 @@ const IdVerifierPage: React.FC = () => {
                 onClick={() => handleVerifyCertificate(Number(id))}
                 endIcon={<SearchIcon />}
                 disabled={isSearching || !id }
+                sx={{ backgroundColor: '#27348b',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                    py: { xs: 1.5, sm: 2 },
+                    px: { xs: 3, sm: 4 },
+                    borderRadius: '12px',
+                    boxShadow: `0 4px 16px #27348b 40`,
+                    '&:hover': {
+                      backgroundColor: 'rgb(63, 81, 181)',
+                      boxShadow: `0 6px 20px #27348b 50`,
+                      transform: 'translateY(-2px)'
+                    },
+                    transition: 'all 0.3s ease'}}
             >
-                {(isSearching) ? 'Validando...' : 'Validar'}
+                {(isSearching) ? 'Verificando...' : 'Iniciar Verificación'}
             </Button>
 
             {renderContent()}

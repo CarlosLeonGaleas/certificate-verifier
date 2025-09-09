@@ -148,7 +148,7 @@ const DocumentIdPage: React.FC = () => {
                 )}
                 {/* Mostrar los resultados debajo del loader si ya completó */}
                 {showResults && (
-                    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ marginTop: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         {certificateData && certificateData.length > 0 ? (
                             certificateData.map((cert, index) => (
                                 <CertificateFound
@@ -168,7 +168,7 @@ const DocumentIdPage: React.FC = () => {
                                 />
                             ))
                         ) : (
-                            <CertificateNotFound message='No se encontraron certificados'/>
+                            <CertificateNotFound message='No hay certificados asociados a la cédula ingresada'/>
                         )}
 
                     </div>
@@ -227,6 +227,20 @@ const DocumentIdPage: React.FC = () => {
                 onClick={() => handleVerifyCertificate(documentId)}
                 endIcon={<SearchIcon />}
                 disabled={isSearching || !documentId}
+                sx={{ backgroundColor: '#27348b',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                    py: { xs: 1.5, sm: 2 },
+                    px: { xs: 3, sm: 4 },
+                    borderRadius: '12px',
+                    boxShadow: `0 4px 16px #27348b 40`,
+                    '&:hover': {
+                      backgroundColor: 'rgb(63, 81, 181)',
+                      boxShadow: `0 6px 20px #27348b 50`,
+                      transform: 'translateY(-2px)'
+                    },
+                    transition: 'all 0.3s ease'}}
             >
                 {isSearching ? 'Buscando...' : 'Iniciar Búsqueda'}
             </Button>
