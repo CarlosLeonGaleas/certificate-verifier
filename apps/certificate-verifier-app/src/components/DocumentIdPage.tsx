@@ -22,6 +22,19 @@ const getCertificates = async (documentId: string = ''): Promise<any[][] | null>
             method: 'GET',
             headers: getHeaders(),
         });
+
+        if (!response.ok) {
+            console.error('Error en la respuesta:', response.status, response.statusText);
+            return null;
+        }
+
+        // Verificar que la respuesta sea JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+            console.error('La respuesta no es JSON');
+            return null;
+        }
+
         const datos: { data: any[][] } = await response.json();
         return datos.data;
     } catch (error) {
@@ -39,6 +52,19 @@ const countCertificates = async (documentId: string = ''): Promise<number> => {
             method: 'GET',
             headers: getHeaders(),
         });
+
+        if (!response.ok) {
+            console.error('Error en la respuesta:', response.status, response.statusText);
+            return 0;
+        }
+
+        // Verificar que la respuesta sea JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+            console.error('La respuesta no es JSON');
+            return 0;
+        }
+
         const datos: { data: number } = await response.json();
         return datos.data;
 
@@ -54,9 +80,9 @@ const DocumentIdPage: React.FC = () => {
     const [certificateFound, setCertificateFound] = useState<boolean>(true);
     const [certificateData, setCertificateData] = useState<any[][] | null>(null);
     const [isSearching, setIsSearching] = useState<boolean>(false);
-    const [isSearchingAnimation, setIsSearchingAnimation] = useState<boolean>(false);
     const [showResults, setShowResults] = useState<boolean>(false);
-    const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
+    const [loaderActive, setLoaderActive] = useState(false);
+    const [loaderCompleted, setLoaderCompleted] = useState(false);
 
     const fetchedOnce = useRef(false);
 
@@ -68,88 +94,87 @@ const DocumentIdPage: React.FC = () => {
         }
     }, [routeId]);
 
+    const handleAnimationFinished = () => {
+        console.log('Animation finished');
+        setShowResults(true);
+        setIsSearching(false);
+    };
+
     const handleVerifyCertificate = async (documentIdToVerify: string) => {
         setIsSearching(true);
         setShowResults(false);
-        setSearchCompleted(false);
         setCertificateData(null);
+        setLoaderActive(true);
+        setLoaderCompleted(false);
 
         try {
-            const certificatesCount = await countCertificates(documentIdToVerify); // Ejecuta primero la petición
-            setIsSearchingAnimation(true); // Comienza animación cuando hay respuesta
+            const certificatesCount = await countCertificates(documentIdToVerify);
 
             if (certificatesCount) {
+                const certificatesData = await getCertificates(documentIdToVerify);
                 setCertificateFound(true);
-                const certificatesData = await getCertificates(documentIdToVerify); // Ejecuta primero la petición
                 setCertificateData(certificatesData);
                 //setCertificateData(result);
             } else {
                 setCertificateFound(false);
                 setCertificateData(null);
             }
-
-            // Esperar 8 segundos después de recibir la respuesta
-            await new Promise(resolve => setTimeout(resolve, 6500));
-
-
         } catch (error) {
             console.error("Error en la verificación:", error);
             setCertificateData(null);
             setCertificateFound(false);
         }
-
-        setIsSearching(false);
-        setIsSearchingAnimation(false);
-        setSearchCompleted(true);
-        setShowResults(true);
+        setLoaderCompleted(true);
     };
 
 
     const renderContent = () => {
-        // Si está buscando o ya completó la búsqueda, mostrar el StepLoader
-        if (isSearchingAnimation || searchCompleted) {
-            return (
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        marginTop: '20px',
-                    }}
-                >
-                    <StepLoader finalSuccess={certificateFound} />
-                    {/* Mostrar los resultados debajo del loader si ya completó */}
-                    {searchCompleted && showResults && (
-                        <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            {certificateData && certificateData.length > 0 ? (
-                                certificateData.map((cert, index) => (
-                                    <CertificateFound
-                                        key={index}
-                                        tokenId={cert[0]}
-                                        name={cert[1]}
-                                        documentId={cert[2]}
-                                        course={cert[3]}
-                                        description={cert[4]}
-                                        institution={cert[5]}
-                                        area={cert[6]}
-                                        issuedDate={cert[7]}
-                                        startDate={cert[8]}
-                                        endDate={cert[9]}
-                                        hoursWorked={cert[10].toString()}
-                                        signatoryName={cert[11]}
-                                    />
-                                ))
-                            ) : (
-                                <CertificateNotFound message='No se encontraron certificados'/>
-                            )}
+        return (
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    marginTop: '20px',
+                }}
+            >
+                {loaderActive && (
+                    <StepLoader
+                        finalSuccess={certificateFound}
+                        active={loaderActive}
+                        completed={loaderCompleted}
+                        onFinish={() => handleAnimationFinished()} // 👈 Mostrar resultados solo cuando animación termina
+                    />
+                )}
+                {/* Mostrar los resultados debajo del loader si ya completó */}
+                {showResults && (
+                    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {certificateData && certificateData.length > 0 ? (
+                            certificateData.map((cert, index) => (
+                                <CertificateFound
+                                    key={index}
+                                    tokenId={cert[0]}
+                                    name={cert[1]}
+                                    documentId={cert[2]}
+                                    course={cert[3]}
+                                    description={cert[4]}
+                                    institution={cert[5]}
+                                    area={cert[6]}
+                                    issuedDate={cert[7]}
+                                    startDate={cert[8]}
+                                    endDate={cert[9]}
+                                    hoursWorked={cert[10].toString()}
+                                    signatoryName={cert[11]}
+                                />
+                            ))
+                        ) : (
+                            <CertificateNotFound message='No se encontraron certificados'/>
+                        )}
 
-                        </div>
-                    )}
-                </div>
-            );
-        } else {
-            return null;
-        }
+                    </div>
+                )}
+            </div>
+        );
     };
 
     return (
@@ -161,12 +186,16 @@ const DocumentIdPage: React.FC = () => {
                 <TextField
                     id="outlined-textarea"
                     label="Número de cédula:"
-                    placeholder="1010101010"
                     type="number"
                     value={documentId ?? ''}
                     onChange={(e) => {
                         const value = e.target.value;
                         setDocumentId(value);
+                        if (loaderActive){
+                            setLoaderActive(false);
+                            setLoaderCompleted(false);
+                            setShowResults(false);
+                        }
                     }}
                     disabled={isSearching}
                     slotProps={{

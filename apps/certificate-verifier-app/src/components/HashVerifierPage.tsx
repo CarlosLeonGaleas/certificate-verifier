@@ -24,6 +24,20 @@ const verifyCertificate = async (hash: string = ''): Promise<Certificate.InfoTyp
             method: 'GET',
             headers: getHeaders(),
         });
+
+        if (!response.ok) {
+            console.error('Error en la respuesta:', response.status, response.statusText);
+            return null;
+        }
+
+        // Verificar que la respuesta sea JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+            console.error('La respuesta no es JSON');
+            return null;
+        }
+
+        // Parsear la respuesta
         const datos: { data: Certificate.InfoType } = await response.json();
         return datos.data;
 
@@ -39,9 +53,9 @@ const HashVerifierPage: React.FC = () => {
     const [certificateFound, setCertificateFound] = useState<boolean>(true);
     const [certificateData, setCertificateData] = useState<Certificate.InfoType | null>(null);
     const [isSearching, setIsSearching] = useState<boolean>(false);
-    const [isSearchingAnimation, setIsSearchingAnimation] = useState<boolean>(false);
     const [showResults, setShowResults] = useState<boolean>(false);
-    const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
+    const [loaderActive, setLoaderActive] = useState(false);
+    const [loaderCompleted, setLoaderCompleted] = useState(false);
 
     const fetchedOnce = useRef(false);
 
@@ -53,15 +67,21 @@ const HashVerifierPage: React.FC = () => {
         }
     }, [routeId]);
 
+    const handleAnimationFinished = () => {
+        console.log('Animation finished');
+        setShowResults(true);
+        setIsSearching(false);
+    };
+
     const handleVerifyCertificate = async (hashToVerify: string) => {
         setIsSearching(true);
         setShowResults(false);
-        setSearchCompleted(false);
         setCertificateData(null);
+        setLoaderActive(true);
+        setLoaderCompleted(false);
 
         try {
-            const result = await verifyCertificate(hashToVerify); // Ejecuta primero la petición
-            setIsSearchingAnimation(true); // Comienza animación cuando hay respuesta
+            const result = await verifyCertificate(hashToVerify);
 
             if (result) {
                 setCertificateFound(true);
@@ -70,52 +90,47 @@ const HashVerifierPage: React.FC = () => {
                 setCertificateFound(false);
                 setCertificateData(null);
             }
-
-            // Esperar 8 segundos después de recibir la respuesta
-            await new Promise(resolve => setTimeout(resolve, 6500));
-
-
         } catch (error) {
             console.error("Error en la verificación:", error);
             setCertificateData(null);
             setCertificateFound(false);
         }
 
-        setIsSearching(false);
-        setIsSearchingAnimation(false);
-        setSearchCompleted(true);
-        setShowResults(true);
+        // señal al loader de que la API terminó
+        setLoaderCompleted(true);
     };
 
 
     const renderContent = () => {
-        // Si está buscando o ya completó la búsqueda, mostrar el StepLoader
-        if (isSearchingAnimation || searchCompleted) {
-            return (
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        marginTop: '20px',
-                    }}
-                >
-                    <StepLoader finalSuccess={certificateFound} />
-                    {/* Mostrar los resultados debajo del loader si ya completó */}
-                    {searchCompleted && showResults && (
-                        <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            {certificateData ? (
-                                <CertificateFound {...certificateData} />
-                            ) : (
-                                <CertificateNotFound message= 'El certificado asociado a ese hash no existe'/>
-                            )}
-                        </div>
-                    )}
-                </div>
-            );
-        } else {
-            return null;
-        }
+        return (
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    marginTop: '20px',
+                }}
+            >
+                {loaderActive && (
+                    <StepLoader
+                        finalSuccess={certificateFound}
+                        active={loaderActive}
+                        completed={loaderCompleted}
+                        onFinish={() => handleAnimationFinished()} // 👈 Mostrar resultados solo cuando animación termina
+                    />
+                )}
+                {/* Mostrar los resultados debajo del loader si ya completó */}
+                {showResults && (
+                    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {certificateData ? (
+                            <CertificateFound {...certificateData} />
+                        ) : (
+                            <CertificateNotFound message={`El certificado asociado a ese hash no existe`} />
+                        )}
+                    </div>
+                )}
+            </div>
+        );
     };
 
     return (
@@ -125,12 +140,15 @@ const HashVerifierPage: React.FC = () => {
                 <TextField
                     id="outlined-textarea"
                     label="Hash de la transacción:"
-                    placeholder="0x581f94124cd4c8df75ff0dfa80be005x7b129073xd44d7ee3x0x675004f21583"
-                    type="number"
                     value={hash ?? ''}
                     onChange={(e) => {
                         const value = e.target.value;
                         setHash(value);
+                        if (loaderActive){
+                            setLoaderActive(false);
+                            setLoaderCompleted(false);
+                            setShowResults(false);
+                        }
                     }}
                     multiline
                     fullWidth

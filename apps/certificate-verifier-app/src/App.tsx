@@ -53,7 +53,12 @@ function App() {
               <Route path="/documentId" element={<DocumentIdPage />} />
               <Route path="/documentId/:documentId" element={<DocumentIdPage />} />
               <Route path="/institution" element={<HomePage />} />
-              <Route path="/loader" element={<StepLoader finalSuccess={false}/>} />
+              <Route path="/loader" element={<StepLoader
+                        finalSuccess= {true}
+                        active= {true}
+                        completed= {true}
+                        onFinish={() => console.log('Animation finished')}
+                    />} />
             </Routes>
           </main>
         </div>

@@ -82,7 +82,7 @@ const generateCertificateHTML = (certificateData : Certificate.InfoType , transa
     // Reemplazar los placeholders comunes
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{web-title}}', `${certificateData.tokenId}-${typeCertificate}-${certificateData.name}-${(function (text, maxLength) {
       return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-    })(nameCourse, 20)
+    })(nameCourse, 25)
       }`);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHashQRBase64}}', transactionHashQRBase64);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{name}}', certificateData.name);

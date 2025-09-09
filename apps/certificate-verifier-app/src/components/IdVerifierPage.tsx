@@ -55,9 +55,9 @@ const IdVerifierPage: React.FC = () => {
     const [certificateFound, setCertificateFound] = useState<boolean>(true);
     const [certificateData, setCertificateData] = useState<Certificate.InfoType | null>(null);
     const [isSearching, setIsSearching] = useState<boolean>(false);
-    const [isSearchingAnimation, setIsSearchingAnimation] = useState<boolean>(false);
     const [showResults, setShowResults] = useState<boolean>(false);
-    const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
+    const [loaderActive, setLoaderActive] = useState(false);
+    const [loaderCompleted, setLoaderCompleted] = useState(false);
 
     const fetchedOnce = useRef(false);
 
@@ -70,15 +70,21 @@ const IdVerifierPage: React.FC = () => {
         }
     }, [routeId]);
 
+    const handleAnimationFinished = () => {
+        console.log('Animation finished');
+        setShowResults(true);
+        setIsSearching(false);
+    };
+
     const handleVerifyCertificate = async (idToVerify: number) => {
         setIsSearching(true);
         setShowResults(false);
-        setSearchCompleted(false);
         setCertificateData(null);
+        setLoaderActive(true);
+        setLoaderCompleted(false);
 
         try {
-            const result = await verifyCertificate(idToVerify); // Ejecuta primero la petición
-            setIsSearchingAnimation(true); // Comienza animación cuando hay respuesta
+            const result = await verifyCertificate(idToVerify);
 
             if (result) {
                 setCertificateFound(true);
@@ -87,52 +93,47 @@ const IdVerifierPage: React.FC = () => {
                 setCertificateFound(false);
                 setCertificateData(null);
             }
-
-            // Esperar 8 segundos después de recibir la respuesta
-            await new Promise(resolve => setTimeout(resolve, 6500));
-
-
         } catch (error) {
             console.error("Error en la verificación:", error);
             setCertificateData(null);
             setCertificateFound(false);
         }
 
-        setIsSearching(false);
-        setIsSearchingAnimation(false);
-        setSearchCompleted(true);
-        setShowResults(true);
+        // señal al loader de que la API terminó
+        setLoaderCompleted(true);
+        // setIsSearching(false);
     };
 
-
     const renderContent = () => {
-        // Si está buscando o ya completó la búsqueda, mostrar el StepLoader
-        if (isSearchingAnimation || searchCompleted) {
-            return (
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        marginTop: '20px',
-                    }}
-                >
-                    <StepLoader finalSuccess={certificateFound} />
-                    {/* Mostrar los resultados debajo del loader si ya completó */}
-                    {searchCompleted && showResults && (
-                        <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            {certificateData ? (
-                                <CertificateFound {...certificateData} />
-                            ) : (
-                                <CertificateNotFound message= {'El certificado ' + id + ' no existe'} />
-                            )}
-                        </div>
-                    )}
-                </div>
-            );
-        } else {
-            return null;
-        }
+        return (
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    marginTop: '20px',
+                }}
+            >
+                {loaderActive && (
+                    <StepLoader
+                        finalSuccess={certificateFound}
+                        active={loaderActive}
+                        completed={loaderCompleted}
+                        onFinish={() => handleAnimationFinished()} // 👈 Mostrar resultados solo cuando animación termina
+                    />
+                )}
+                {/* Mostrar los resultados debajo del loader si ya completó */}
+                {showResults && (
+                    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {certificateData ? (
+                            <CertificateFound {...certificateData} />
+                        ) : (
+                            <CertificateNotFound message={`El certificado ${id} no existe`} />
+                        )}
+                    </div>
+                )}
+            </div>
+        );
     };
 
     return (
@@ -147,26 +148,31 @@ const IdVerifierPage: React.FC = () => {
                     onChange={(e) => {
                         const value = e.target.value;
                         setId(value === '' ? 0 : Number(value));
+                        if (loaderActive){
+                            setLoaderActive(false);
+                            setLoaderCompleted(false);
+                            setShowResults(false);
+                        }
                     }}
                     disabled={isSearching}
                     slotProps={{
                         input: {
-                        inputProps: {
-                            inputMode: 'numeric',
-                            pattern: '[0-9]*',
-                        },
-                        sx: {
-                            backgroundColor: 'white',
-                            '& input[type=number]': {
-                                MozAppearance: 'textfield',
+                            inputProps: {
+                                inputMode: 'numeric',
+                                pattern: '[0-9]*',
                             },
-                            '& input[type=number]::-webkit-outer-spin-button': {
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                            },
-                            '& input[type=number]::-webkit-inner-spin-button': {
-                                WebkitAppearance: 'none',
-                                margin: 0,
+                            sx: {
+                                backgroundColor: 'white',
+                                '& input[type=number]': {
+                                    MozAppearance: 'textfield',
+                                },
+                                '& input[type=number]::-webkit-outer-spin-button': {
+                                    WebkitAppearance: 'none',
+                                    margin: 0,
+                                },
+                                '& input[type=number]::-webkit-inner-spin-button': {
+                                    WebkitAppearance: 'none',
+                                    margin: 0,
                                 },
                             },
                         }
@@ -177,9 +183,9 @@ const IdVerifierPage: React.FC = () => {
                 variant="contained"
                 onClick={() => handleVerifyCertificate(Number(id))}
                 endIcon={<SearchIcon />}
-                disabled={isSearching || !id}
+                disabled={isSearching || !id }
             >
-                {isSearching ? 'Validando...' : 'Validar'}
+                {(isSearching) ? 'Validando...' : 'Validar'}
             </Button>
 
             {renderContent()}
