@@ -301,7 +301,7 @@ const html_BACKGROUND002 = `
             </div>
         </div>
         <div class="col2">
-            <a href="{{url-hash}}" class="hash-style" target="_blank" rel="noopener noreferrer">Hash: {{transactionHash}}</a>
+            <a href="{{url-hash}}" class="hash-style" target="_blank" rel="noopener noreferrer">{{transactionHash}}</a>
             <img style="max-width: 2.8cm;" src="data:image/png;base64,{{transactionHashQRBase64}}" alt="QR code to validate certificate">
             <a href="{{url-blockchain}}" style="text-decoration: none; color: inherit; display: block; height: 1.1cm; width: 2.5cm; margin-right: 0.15cm;">
                 <div class="blockchain-banner-section">
