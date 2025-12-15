@@ -12,7 +12,8 @@ const CertificateNotFound: React.FC<CertificateNotFoundProps> = ({ message = 'Ce
     <Box
       maxWidth="900px"
       mx="auto"
-      mb={5}
+      mt={5}
+      mb={2}
       bgcolor="background.paper"
       borderRadius={3}
       boxShadow={3}

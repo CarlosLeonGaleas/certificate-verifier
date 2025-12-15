@@ -1,7 +1,6 @@
 // Suggested code may be subject to a license. Learn more: ~LicenseLog:3002747772.
 import React from 'react';
 import { Certificate } from "@certificate-verifier/core"
-import { green } from '@mui/material/colors'
 import QRCode from 'qrcode';
 import {
   Box,
@@ -28,6 +27,8 @@ import {
   Link as Blockchain,
   Badge as Cedula
 } from '@mui/icons-material';
+
+import { useInstitution } from '../contexts/InstitutionContext';
 
 //PLANTILLA DE LOS DISTINTOS CERTIFICADOS EMITIDOS (Ubicación de los elementos y estilos)
 import html_BACKGROUND001 from '../assets/BACKGROUNDS/BACKGROUND001';
@@ -173,6 +174,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   signatoryName,
   hash,
 }) => {
+  const { config } = useInstitution();
   const InfoItem = ({ icon: Icon, label, value }) => {
     if (!value && value !== 0) return null;
 
@@ -189,7 +191,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
           '&:hover': { bgcolor: 'grey.100' },
         }}
       >
-        <Avatar sx={{ bgcolor: '#27348b', width: 40, height: 40 }}>
+        <Avatar sx={{ bgcolor: config.primaryColor, width: 40, height: 40 }}>
           <Icon sx={{ color: 'white', fontSize: 20 }} />
         </Avatar>
         <Box>
@@ -222,7 +224,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
           px: 6,
           py: 6,
           textAlign: 'center',
-          background: 'linear-gradient(90deg, #27348b, #1e40af)',
+          background: config.certificateFoundColor,
           color: 'white',
         }}
       >
@@ -239,7 +241,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
             justifyContent: 'center',
           }}
         >
-          <MilitaryTech sx={{ fontSize: 32, color: '#27348b' }} />
+          <MilitaryTech sx={{ fontSize: 32, color: config.primaryColor }} />
         </Box>
         <Typography variant="h5" fontWeight="bold" mb={1}>
           Certificado Encontrado en la Blockchain
@@ -331,7 +333,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
         </Box>
 
         {/* Botón de Descarga */}
-        {getBackgroundCode(course).includes('BACKGROUND') && (
+        {getBackgroundCode(course).includes('BACKGROUND') && hash && (
           <>
             <Divider sx={{ mb: 3 }} />
             <Box display="flex" justifyContent="center">

@@ -149,6 +149,7 @@ const IdVerifierPage: React.FC = () => {
                 maxWidth="900px"
                 mx="auto"
                 mt={2}
+                mb={2}
                 p={3}
                 bgcolor="background.paper"
                 borderRadius={3}

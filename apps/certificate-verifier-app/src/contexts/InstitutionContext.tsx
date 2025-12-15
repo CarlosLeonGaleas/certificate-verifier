@@ -8,6 +8,7 @@ interface InstitutionConfig {
   secondaryColor: string
   appBarBgColor: string
   drawerBgColor: string
+  certificateFoundColor: string
 }
 
 interface InstitutionContextType {
@@ -25,6 +26,7 @@ const DEFAULT_CONFIG: InstitutionConfig = {
   secondaryColor: 'white',
   appBarBgColor: 'white',
   drawerBgColor: 'rgb(39, 52, 139)',
+  certificateFoundColor: 'linear-gradient(90deg, rgb(39, 52, 139), #1e40af)'
 }
 
 const ITCA_CONFIG: InstitutionConfig = {
@@ -34,6 +36,7 @@ const ITCA_CONFIG: InstitutionConfig = {
   secondaryColor: 'rgb(134, 188, 37)',
   appBarBgColor: 'white',
   drawerBgColor: 'rgb(0, 72, 153)',
+  certificateFoundColor: 'linear-gradient(90deg, rgb(0, 72, 153), rgb(1, 86, 165))'
 }
 
 export function InstitutionProvider({ children }: { children: ReactNode }) {
