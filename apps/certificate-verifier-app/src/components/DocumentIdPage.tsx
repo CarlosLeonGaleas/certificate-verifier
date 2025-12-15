@@ -9,6 +9,8 @@ import CertificateFound from './CertificateFound';
 import CertificateNotFound from './CertificateNotFound';
 import StepLoader from './StepLoader';
 
+import { useInstitution } from '../contexts/InstitutionContext';
+
 const url_backend_api = import.meta.env.VITE_API_BACKEND_URL_BASE;
 
 const getHeaders = () => {
@@ -85,6 +87,8 @@ const DocumentIdPage: React.FC = () => {
     const [showResults, setShowResults] = useState<boolean>(false);
     const [loaderActive, setLoaderActive] = useState(false);
     const [loaderCompleted, setLoaderCompleted] = useState(false);
+
+    const { config } = useInstitution();
 
     const fetchedOnce = useRef(false);
 
@@ -200,7 +204,7 @@ const DocumentIdPage: React.FC = () => {
                     component="h1"
                     sx={{
                         fontWeight: 700,
-                        color: 'rgb(39, 52, 139)',
+                        color: config.primaryColor,
                         fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' },
                         mb: 1
                     }}
@@ -243,10 +247,10 @@ const DocumentIdPage: React.FC = () => {
                                     borderColor: 'rgba(39, 52, 139, 0.12)'
                                 },
                                 '&:hover fieldset': {
-                                    borderColor: 'rgb(39, 52, 139)'
+                                    borderColor: config.primaryColor
                                 },
                                 '&.Mui-focused fieldset': {
-                                    borderColor: 'rgb(39, 52, 139)'
+                                    borderColor: config.primaryColor
                                 },
                                 '&.Mui-error fieldset': {
                                     borderColor: 'rgb(211, 47, 47)'
@@ -255,14 +259,14 @@ const DocumentIdPage: React.FC = () => {
                             '& .MuiInputLabel-root': {
                                 color: 'rgb(100, 116, 139)',
                                 '&.Mui-focused': {
-                                    color: 'rgb(39, 52, 139)'
+                                    color: config.primaryColor
                                 },
                                 '&.Mui-error': {
                                     color: 'rgb(211, 47, 47)'
                                 }
                             },
                             '& .MuiOutlinedInput-input': {
-                                color: 'rgb(39, 52, 139)',
+                                color: config.primaryColor,
                                 fontWeight: 500
                             },
                             '& .MuiFormHelperText-root': {
@@ -297,9 +301,9 @@ const DocumentIdPage: React.FC = () => {
                     variant="contained"
                     onClick={() => handleVerifyCertificate(documentId)}
                     endIcon={<SearchIcon />}
-                    disabled={isSearching || !documentId}
+                    disabled={isSearching || documentId.length < 10}
                     sx={{
-                        backgroundColor: '#27348b',
+                        backgroundColor: config.primaryColor,
                         color: 'white',
                         fontWeight: 700,
                         fontSize: { xs: '1rem', sm: '1.1rem' },
@@ -308,7 +312,6 @@ const DocumentIdPage: React.FC = () => {
                         borderRadius: '12px',
                         boxShadow: `0 4px 16px #27348b 40`,
                         '&:hover': {
-                            backgroundColor: 'rgb(63, 81, 181)',
                             boxShadow: `0 6px 20px #27348b 50`,
                             transform: 'translateY(-2px)'
                         },

@@ -30,10 +30,10 @@ const DEFAULT_CONFIG: InstitutionConfig = {
 const ITCA_CONFIG: InstitutionConfig = {
   name: 'ITCA',
   logo: '/ITCA_VerdeAzul.svg',
-  primaryColor: 'rgb(1, 86, 165)',
-  secondaryColor: 'rgb(128, 195, 67)',
+  primaryColor: 'rgb(0, 72, 153)',
+  secondaryColor: 'rgb(134, 188, 37)',
   appBarBgColor: 'white',
-  drawerBgColor: 'rgb(128, 195, 67)',
+  drawerBgColor: 'rgb(0, 72, 153)',
 }
 
 export function InstitutionProvider({ children }: { children: ReactNode }) {

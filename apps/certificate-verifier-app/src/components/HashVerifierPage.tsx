@@ -8,7 +8,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import CertificateFound from './CertificateFound';
 import CertificateNotFound from './CertificateNotFound';
 import StepLoader from './StepLoader';
-import { Certificate } from "@certificate-verifier/core"
+import { Certificate } from "@certificate-verifier/core";
+
+import { useInstitution } from '../contexts/InstitutionContext';
 
 const url_backend_api = import.meta.env.VITE_API_BACKEND_URL_BASE;
 
@@ -60,6 +62,8 @@ const HashVerifierPage: React.FC = () => {
     const [loaderCompleted, setLoaderCompleted] = useState(false);
 
     const fetchedOnce = useRef(false);
+
+    const { config } = useInstitution();
 
     useEffect(() => {
         if (routeId && !fetchedOnce.current) {
@@ -156,7 +160,7 @@ const HashVerifierPage: React.FC = () => {
                     component="h1"
                     sx={{
                         fontWeight: 700,
-                        color: 'rgb(39, 52, 139)',
+                        color: config.primaryColor,
                         fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' },
                         mb: 1
                     }}
@@ -197,10 +201,10 @@ const HashVerifierPage: React.FC = () => {
                                     borderColor: 'rgba(39, 52, 139, 0.12)'
                                 },
                                 '&:hover fieldset': {
-                                    borderColor: 'rgb(39, 52, 139)'
+                                    borderColor: config.primaryColor
                                 },
                                 '&.Mui-focused fieldset': {
-                                    borderColor: 'rgb(39, 52, 139)'
+                                    borderColor: config.primaryColor
                                 },
                                 '&.Mui-error fieldset': {
                                     borderColor: 'rgb(211, 47, 47)'
@@ -209,14 +213,14 @@ const HashVerifierPage: React.FC = () => {
                             '& .MuiInputLabel-root': {
                                 color: 'rgb(100, 116, 139)',
                                 '&.Mui-focused': {
-                                    color: 'rgb(39, 52, 139)'
+                                    color: config.primaryColor
                                 },
                                 '&.Mui-error': {
                                     color: 'rgb(211, 47, 47)'
                                 }
                             },
                             '& .MuiOutlinedInput-input': {
-                                color: 'rgb(39, 52, 139)',
+                                color: config.primaryColor,
                                 fontWeight: 500
                             },
                             '& .MuiFormHelperText-root': {
@@ -247,9 +251,9 @@ const HashVerifierPage: React.FC = () => {
                     variant="contained"
                     onClick={() => handleVerifyCertificate(hash)}
                     endIcon={<SearchIcon />}
-                    disabled={isSearching || !hash}
+                    disabled={isSearching || hash.length < 66}
                     sx={{
-                        backgroundColor: '#27348b',
+                        backgroundColor: config.primaryColor,
                         color: 'white',
                         fontWeight: 700,
                         fontSize: { xs: '1rem', sm: '1.1rem' },
@@ -258,7 +262,6 @@ const HashVerifierPage: React.FC = () => {
                         borderRadius: '12px',
                         boxShadow: `0 4px 16px #27348b 40`,
                         '&:hover': {
-                            backgroundColor: 'rgb(63, 81, 181)',
                             boxShadow: `0 6px 20px #27348b 50`,
                             transform: 'translateY(-2px)'
                         },

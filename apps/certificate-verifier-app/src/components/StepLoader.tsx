@@ -7,6 +7,8 @@ import LinkIcon from '@mui/icons-material/Link';
 import SearchIcon from '@mui/icons-material/Search';
 import DescriptionIcon from '@mui/icons-material/Description';
 
+import { useInstitution } from '../contexts/InstitutionContext';
+
 type StepStatus = 'idle' | 'loading' | 'success' | 'error';
 
 interface StepLoaderProps {
@@ -25,6 +27,8 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
 
   const isProcessingStep = useRef(false);
   const isBuffering = useRef(false);
+
+  const { config } = useInstitution();
 
   // Reset / start when active changes
   useEffect(() => {
@@ -137,7 +141,7 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
                 ? green[500]
                 : isError
                 ? red[500]
-                : '#27348b',
+                : config.primaryColor,
               '&:hover': {
                 bgcolor: isSuccess
                   ? green[700]
