@@ -6,8 +6,7 @@ import IconButton from '@mui/material/IconButton'
 import MenuIcon from '@mui/icons-material/Menu'
 import { Box } from '@mui/material'
 
-const UniversitarioRU_Azul = '/UniversitarioRU_Azul.svg'
-const Investigacion_Color = '/Investigacion_Color.svg'
+import { useInstitution } from '../contexts/InstitutionContext'
 
 const drawerWidth = 260
 
@@ -39,11 +38,9 @@ const AppBar = styled(MuiAppBar, {
 }))
 
 const AppBarCustom: React.FC<AppBarCustomProps> = ({ openOptions, handleDrawerToggle }) => {
-  const isDarkMode = false
-  const appBarBgColor = isDarkMode ? 'black' : 'white'
-  const appBarColor = isDarkMode ? 'white' : 'rgb(39, 52, 139)'
+  const { config } = useInstitution()
   return (
-    <AppBar position="fixed" openOptions={openOptions} sx={{ backgroundColor: appBarBgColor, color: appBarColor }}>
+    <AppBar position="fixed" openOptions={openOptions} sx={{ backgroundColor: config.appBarBgColor, color: config.primaryColor }}>
       <Toolbar>
         <IconButton
           color="inherit"
@@ -58,18 +55,13 @@ const AppBarCustom: React.FC<AppBarCustomProps> = ({ openOptions, handleDrawerTo
           <MenuIcon />
         </IconButton>
         <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-        {!openOptions &&<img
-          src={UniversitarioRU_Azul}
-          alt="Universitario Rumiñahui"
-          style={{ width: 150, height: 35 }}
-        />}
         <Typography variant="h6" noWrap component="div">
-          <strong>VALIDAR CERTIFICADOS EN LA BLOCKCHAIN</strong>
+          <strong>VALIDAR CERTIFICADOS BLOCKCHAIN</strong>
         </Typography>
         {!openOptions &&<img
-          src={Investigacion_Color}
+          src={config.logo}
           alt="Investigación"
-          style={{ width: 150, height: 35 }}
+          style={{ width: 200, height: 40 }}
         />}
         </Box>
       </Toolbar>

@@ -10,8 +10,8 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DrawerItem from './DrawerItem'
 import { drawerItemsVerifier, drawerItemsSearch } from '../icons/index'
 
-const UniversitarioRU_Blanco = '/UniversitarioRU_Blanco.svg'
-const UniversitarioRU_Azul = '/UniversitarioRU_Azul.svg'
+import { useInstitution } from '../contexts/InstitutionContext'
+
 const InvestigacionLogoVerticalBlanco = '/Investigacion_LogoVerticalBlanco.svg'
 
 const drawerWidth = 260
@@ -50,13 +50,13 @@ const Drawer = styled(MuiDrawer, {
   boxSizing: 'border-box',
   ...(open
     ? {
-        ...openedMixin(theme),
-        '& .MuiDrawer-paper': openedMixin(theme)
-      }
+      ...openedMixin(theme),
+      '& .MuiDrawer-paper': openedMixin(theme)
+    }
     : {
-        ...closedMixin(theme),
-        '& .MuiDrawer-paper': closedMixin(theme)
-      })
+      ...closedMixin(theme),
+      '& .MuiDrawer-paper': closedMixin(theme)
+    })
 }))
 
 const DrawerHeader = styled('div')(({ theme }) => ({
@@ -73,10 +73,7 @@ type DrawerMenuProps = {
 }
 
 const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
-  const isDarkMode = false
-  const drawerBgColor = isDarkMode ? 'rgb(23, 23, 23)' : 'rgb(39, 52, 139)'
-  const drawerHeaderBgColor = isDarkMode ? 'black' : 'white'
-  const iconColor = isDarkMode ? 'white' : 'rgb(39, 52, 139)'
+  const { config, isITCA } = useInstitution()
 
   return (
     <Drawer
@@ -84,9 +81,9 @@ const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
       open={open}
       sx={{
         '& .MuiDrawer-paper': {
-          backgroundColor: drawerBgColor,
+          backgroundColor: config.drawerBgColor,
           color: 'white',
-          borderBlockColor: drawerBgColor,
+          borderBlockColor: config.drawerBgColor,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -101,25 +98,16 @@ const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            backgroundColor: drawerHeaderBgColor
+            backgroundColor: config.appBarBgColor
           }}
         >
-          {isDarkMode ? (
-            <img
-              src={UniversitarioRU_Blanco}
-              alt="Universitario"
-              className="universitario-logo"
-              style={{ width: 200, height: 40 }}
-            />
-          ) : (
-            <img
-              src={UniversitarioRU_Azul}
-              alt="Universitario"
-              className="universitario-logo"
-              style={{ width: 200, height: 40 }}
-            />
-          )}
-          <IconButton onClick={handleClose} sx={{ color: iconColor }} size="medium">
+          <img
+            src={config.logo}
+            alt="Universitario"
+            className="universitario-logo"
+            style={{ width: 200, height: 40 }}
+          />
+          <IconButton onClick={handleClose} sx={{ color: config.primaryColor }} size="medium">
             <ChevronLeftIcon />
           </IconButton>
         </DrawerHeader>
@@ -171,7 +159,7 @@ const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
         </List>
       </Box>
       <Box sx={{ textAlign: 'center', mb: 2 }}>
-        {open && (
+        {open && !isITCA && (
           <img
             src={InvestigacionLogoVerticalBlanco}
             alt="Departamento de Investigación"
