@@ -314,12 +314,29 @@ const html_BACKGROUND005 = `
                 <p></p>
                 <p class="montserrat-text-2">{{issuedAt}}</p>
                 <div class="signs-section">
-                    <div style="position: relative; display: inline-block;">
-                        <img style="max-width: auto; height: 3.8cm; margin-bottom: -1.2cm; margin-left:-1cm; position: relative; z-index: 1;" src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1748445791/blockchain-webpage/FirmaMZ_njnfshvg0at.svg" alt="director sign">
-                        <img style="width: 3.5cm; height: 3.5cm; position: absolute; top: 0; left: 0; margin-top: -0.5cm; margin-left: 3.5cm; z-index: 2;" src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1748380965/blockchain-webpage/SelloINV_AZUL_pvi8arfdjmt3.svg" alt="investigación stamp">
+                    <div id="sign-default" style="position: relative; display: inline-block;">
+                        <img style="max-width: auto; height: 3.8cm; margin-bottom: -1.2cm; margin-left:-1cm; position: relative; z-index: 1;"
+                            src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1748445791/blockchain-webpage/FirmaMZ_njnfshvg0at.svg">
+                        <img style="width: 3.5cm; height: 3.5cm; position: absolute; top: 0; left: 0; margin-top: -0.5cm; margin-left: 3.5cm; z-index: 2;"
+                            src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1748380965/blockchain-webpage/SelloINV_AZUL_pvi8arfdjmt3.svg">
                         <div class="sign-linea"></div>
-                        <p style="margin-top: 0cm;font-size: 0.4cm !important;" class="montserrat-text-sign">PhD. Marcelo Zambrano</p>
-                        <p style="margin-top: -0.35cm;font-size: 0.35cm !important;" class="montserrat-text-sign"><strong>DIRECTOR DE INVESTIGACIÓN</strong></p>
+                        <p class="montserrat-text-sign" style="font-size: 0.4cm !important;">PhD. Marcelo Zambrano</p>
+                        <p class="montserrat-text-sign" style="margin-top: -0.35cm;font-size: 0.35cm !important;">
+                            <strong>DIRECTOR DE INVESTIGACIÓN</strong>
+                        </p>
+                    </div>
+
+                    <!-- Firma alternativa -->
+                    <div id="sign-cedula" style="position: relative; display: none;">
+                        <img style="max-width: auto; height: 2.5cm; margin-left:-1cm; position: relative; z-index: 1;"
+                            src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1726072710/blockchain-webpage/firmaCL_decg1qfg.svg">
+                        <img style="width: 3.5cm; height: 3.5cm; position: absolute; top: 0; left: 0; margin-top: -0.5cm; margin-left: 6.2cm; z-index: 2;"
+                            src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1748380965/blockchain-webpage/SelloINV_AZUL_pvi8arfdjmt3.svg">
+                        <div class="sign-linea"></div>
+                        <p class="montserrat-text-sign" style="margin-top: 0cm; font-size: 0.4cm !important;">Ing. Carlos León</p>
+                        <p class="montserrat-text-sign" style="margin-top: -0.35cm;font-size: 0.35cm !important;">
+                            <strong>COORDINADOR - COMISIÓN DE PROYECTOS</strong>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -342,6 +359,17 @@ const html_BACKGROUND005 = `
     <script>
         // Espera a que el documento HTML completo se cargue
         window.onload = function() {
+            const cedula = "{{cedula}}";
+
+            if (cedula === "1709989907") {
+                const signDefault = document.getElementById("sign-default");
+                const signCedula  = document.getElementById("sign-cedula");
+
+                if (signDefault && signCedula) {
+                    signDefault.style.display = "none";
+                    signCedula.style.display  = "inline-block";
+                }
+            }
             setTimeout(function() {
                 var userResponse = confirm("¿Desea imprimir el certificado?");
                 if (userResponse) {

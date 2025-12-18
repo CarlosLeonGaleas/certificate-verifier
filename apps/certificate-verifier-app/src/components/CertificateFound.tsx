@@ -111,6 +111,7 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
       }`);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHashQRBase64}}', transactionHashQRBase64);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{name}}', certificateData.name);
+    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{cedula}}', certificateData.documentId);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{description}}', certificateData.description);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{issuedAt}}', certificateData.issuedDate);
     const paddedTokenID = String(certificateData.tokenId).padStart(4, '0');
