@@ -137,6 +137,14 @@ const html_BACKGROUND005 = `
             font-style: normal;
             text-align: justify;
         }
+        .montserrat-text-center {
+            font-family: "Montserrat", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: 400;
+            font-size: 0.4cm !important;
+            font-style: normal;
+            text-align: center;
+        }
         .montserrat-text-2 {
             font-family: "Montserrat", sans-serif;
             font-optical-sizing: auto;
@@ -310,7 +318,7 @@ const html_BACKGROUND005 = `
                 <h1 class="participant-name"><strong>{{name}}</strong></h1>
                 <!-- <hr> -->
                 <div class="linea"></div>
-                <p class="montserrat-text">{{description}}</p>
+                <p id="description-text" class="montserrat-text">{{description}}</p>
                 <p></p>
                 <p class="montserrat-text-2">{{issuedAt}}</p>
                 <div class="signs-section">
@@ -360,6 +368,7 @@ const html_BACKGROUND005 = `
         // Espera a que el documento HTML completo se cargue
         window.onload = function() {
             const cedula = "{{cedula}}";
+            const BACKGROUND = "{{BACKGROUND}}";
 
             if (cedula === "1709989907") {
                 const signDefault = document.getElementById("sign-default");
@@ -368,6 +377,14 @@ const html_BACKGROUND005 = `
                 if (signDefault && signCedula) {
                     signDefault.style.display = "none";
                     signCedula.style.display  = "inline-block";
+                }
+            }
+
+            if (BACKGROUND === "BACKGROUND007"){
+                const description = document.getElementById("description-text");
+                if (description) {
+                    description.classList.remove("montserrat-text");
+                    description.classList.add("montserrat-text-center");
                 }
             }
             setTimeout(function() {
