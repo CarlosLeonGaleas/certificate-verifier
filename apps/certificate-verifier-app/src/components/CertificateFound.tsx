@@ -94,7 +94,11 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
         html_template_BACKGROUND = html_BACKGROUND005;
         break;
       case 'BACKGROUND006':
-        html_template_BACKGROUND = html_BACKGROUND005;
+        if (typeCertificate === "PROYECTO"){
+          html_template_BACKGROUND = html_BACKGROUND005;
+        }else{
+          html_template_BACKGROUND = html_BACKGROUND006;
+        }
         break;
       case 'BACKGROUND007':
         html_template_BACKGROUND = html_BACKGROUND005;
