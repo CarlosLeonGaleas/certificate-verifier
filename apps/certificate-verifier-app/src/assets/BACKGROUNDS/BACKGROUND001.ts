@@ -237,6 +237,13 @@ const html_BACKGROUND001 = `
             margin-top: 50px;
             margin-bottom: -1cm;
         }
+        .two-signs-section {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            margin-top: 50px;
+            margin-bottom: -1cm;
+        }
         .col2{
             display: flex;
             flex-direction: column;
@@ -293,7 +300,7 @@ const html_BACKGROUND001 = `
                 <p class="montserrat-text">{{description}}</p>
                 <p></p>
                 <p class="montserrat-text-2">{{issuedAt}}</p>
-                <div class="signs-section">
+                <div class="signs-section" id="singsection">
                     <div>
                         <img style="max-width: 5.5cm; height: 2.3cm; margin-top: 0.4cm; margin-bottom: -0.1cm;" src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1748445480/blockchain-webpage/FirmaAlcalde_tuvdnrioxzzq.svg" alt="alcalde sign">
                         <div class="sign-linea"></div>
@@ -307,7 +314,7 @@ const html_BACKGROUND001 = `
                         <p style="margin-top: 0cm;font-size: 0.4cm !important;" class="montserrat-text-sign">PhD. Marcelo Zambrano</p>
                         <p style="margin-top: -0.35cm;font-size: 0.35cm !important;" class="montserrat-text-sign"><strong>DIRECTOR DE INVESTIGACIÓN</strong></p>
                     </div>
-                    <div>
+                    <div id="instructor-sign" style="display: inline-block;">
                         <img style="width: 5.5cm;height: 3.1cm; margin-top: 0.2cm; margin-bottom: -1.1cm;" src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1748445553/blockchain-webpage/FirmaER_chp9u5tpmc4.svg" alt="Instructor sign">
                         <div style="margin-top: 0.4cm;" class="sign-linea"></div>
                         <p style="margin-top: 0cm;font-size: 0.4cm !important;" class="montserrat-text-sign">Mg. Edwin Ramón</p>
@@ -334,6 +341,19 @@ const html_BACKGROUND001 = `
     <script>
         // Espera a que el documento HTML completo se cargue
         window.onload = function() {
+            const BACKGROUND = "{{BACKGROUND}}";
+
+            if (BACKGROUND === "BACKGROUND002"){
+                const singsSection = document.getElementById("singsection");
+                const signInstructor = document.getElementById("instructor-sign");
+                if (singsSection) {
+                    singsSection.classList.remove("signs-section");
+                    singsSection.classList.add("two-signs-section");
+                }
+                if (signInstructor) {
+                    signInstructor.style.display = "none";
+                }
+            }
             setTimeout(function() {
                 var userResponse = confirm("¿Desea imprimir el certificado?");
                 if (userResponse) {
