@@ -33,7 +33,6 @@ import { useInstitution } from '../contexts/InstitutionContext';
 //PLANTILLA DE LOS DISTINTOS CERTIFICADOS EMITIDOS (Ubicación de los elementos y estilos)
 import html_BACKGROUND001 from '../assets/BACKGROUNDS/BACKGROUND001';
 import html_BACKGROUND003 from '../assets/BACKGROUNDS/BACKGROUND003';
-import html_BACKGROUND004 from '../assets/BACKGROUNDS/BACKGROUND004';
 import html_BACKGROUND005 from '../assets/BACKGROUNDS/BACKGROUND005';
 import html_BACKGROUND006 from '../assets/BACKGROUNDS/BACKGROUND006';
 
@@ -88,7 +87,7 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
         html_template_BACKGROUND = html_BACKGROUND003;
         break;
       case 'BACKGROUND004':
-        html_template_BACKGROUND = html_BACKGROUND004;
+        html_template_BACKGROUND = html_BACKGROUND003;
         break;
       case 'BACKGROUND005':
         html_template_BACKGROUND = html_BACKGROUND005;

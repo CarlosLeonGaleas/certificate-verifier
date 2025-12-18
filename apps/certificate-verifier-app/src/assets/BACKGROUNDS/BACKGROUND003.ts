@@ -314,7 +314,7 @@ const html_BACKGROUND003 = `
                 <p></p>
                 <p class="montserrat-text-2">{{issuedAt}}</p>
                 <div class="signs-section">
-                    <div style="position: relative; display: inline-block;">
+                    <div id="director-sign" style="position: relative; display: inline-block;">
                         <img style="max-width: auto; height: 3.8cm; margin-bottom: -1.2cm; margin-left:-1cm; position: relative; z-index: 1;" src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1748445791/blockchain-webpage/FirmaMZ_njnfshvg0at.svg" alt="director sign">
                         <img style="width: 3.5cm; height: 3.5cm; position: absolute; top: 0; left: 0; margin-top: -0.5cm; margin-left: 3.5cm; z-index: 2;" src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1748380965/blockchain-webpage/SelloINV_AZUL_pvi8arfdjmt3.svg" alt="investigación stamp">
                         <div class="sign-linea"></div>
@@ -348,6 +348,15 @@ const html_BACKGROUND003 = `
     <script>
         // Espera a que el documento HTML completo se cargue
         window.onload = function() {
+            const cedula = "{{cedula}}";
+
+            if (cedula === "1709989907") {
+                const signDirector = document.getElementById("director-sign");
+
+                if (signDirector) {
+                    signDirector.style.display = "none";
+                }
+            }
             setTimeout(function() {
                 var userResponse = confirm("¿Desea imprimir el certificado?");
                 if (userResponse) {
