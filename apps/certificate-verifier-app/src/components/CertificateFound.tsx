@@ -35,6 +35,7 @@ import html_BACKGROUND001 from '../assets/BACKGROUNDS/BACKGROUND001';
 import html_BACKGROUND003 from '../assets/BACKGROUNDS/BACKGROUND003';
 import html_BACKGROUND005 from '../assets/BACKGROUNDS/BACKGROUND005';
 import html_BACKGROUND006 from '../assets/BACKGROUNDS/BACKGROUND006';
+import html_BACKGROUND008 from '../assets/BACKGROUNDS/BACKGROUND008';
 
 const getTypeValue = (value: string): string => {
   const parts = value.split('|');
@@ -75,6 +76,9 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
     let backgroundCode = getBackgroundCode(certificateData.course);
     let doc_id;
 
+    const urlTokenId = `https://d1uys4mzmfaahs.cloudfront.net/id/${certificateData.tokenId}`;
+    let urlHash = `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
+
     switch (backgroundCode) {
       case 'BACKGROUND001':
         html_template_BACKGROUND = html_BACKGROUND001;
@@ -93,9 +97,9 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
         html_template_BACKGROUND = html_BACKGROUND005;
         break;
       case 'BACKGROUND006':
-        if (typeCertificate === "PROYECTO"){
+        if (typeCertificate === "PROYECTO") {
           html_template_BACKGROUND = html_BACKGROUND005;
-        }else{
+        } else {
           html_template_BACKGROUND = html_BACKGROUND006;
         }
         break;
@@ -103,13 +107,22 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
         html_template_BACKGROUND = html_BACKGROUND005;
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND007');
         break;
+      case 'BACKGROUND008':
+        html_template_BACKGROUND = html_BACKGROUND008;
+        urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
+        let variant;
+        if (nameCourse.includes(':')) {
+          [variant] = nameCourse.split(':').map(s => s.trim());
+        } else {
+          variant = 'PONENTE'; // Or handle default case
+        }
+        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant.toUpperCase());
+        break;
       default:
         // Optional: Handle cases where backgroundCode is not recognized
         html_template_BACKGROUND = html_BACKGROUND003;
         break;
     }
-    const urlTokenId = `https://d1uys4mzmfaahs.cloudfront.net/id/${certificateData.tokenId}`;
-    const urlHash = `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
 
     // Reemplazar los placeholders comunes
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{web-title}}', `${certificateData.tokenId}-${typeCertificate}-${certificateData.name}-${(function (text, maxLength) {
@@ -153,12 +166,22 @@ const openCertificateHTML = async (certificateData: Certificate.InfoType) => {
   try {
     console.log("Certificate Data:", certificateData);
     let url;
-    if (certificateData.hash) {
-      url = `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
+    if (certificateData.institution.includes('ITCA')) {
+      if (certificateData.hash) {
+        url = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
+      }
+      else {
+        url = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/id/${certificateData.tokenId}`;
+      }
+    }else{
+      if (certificateData.hash) {
+        url = `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
+      }
+      else {
+        url = `https://d1uys4mzmfaahs.cloudfront.net/id/${certificateData.tokenId}`;
+      }
     }
-    else {
-      url = `https://d1uys4mzmfaahs.cloudfront.net/id/${certificateData.tokenId}`;
-    }
+    
     const transactionHashQRBase64 = await getTransactionHashQRCode(url);
     generateCertificateHTML(certificateData, transactionHashQRBase64);
   } catch (error) {
@@ -367,7 +390,8 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
                     hash,
                   })
                 }
-                sx={{ backgroundColor: '#27348b',
+                sx={{
+                  backgroundColor: '#27348b',
                   color: 'white',
                   fontWeight: 700,
                   fontSize: { xs: '1rem', sm: '1.1rem' },
@@ -380,7 +404,8 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
                     boxShadow: `0 6px 20px #27348b 50`,
                     transform: 'translateY(-2px)'
                   },
-                  transition: 'all 0.3s ease'}}
+                  transition: 'all 0.3s ease'
+                }}
               >
                 Descargar Certificado Digital
               </Button>
