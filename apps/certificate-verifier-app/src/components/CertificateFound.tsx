@@ -117,6 +117,7 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
           variant = 'PONENTE'; // Or handle default case
         }
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant.toUpperCase());
+        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
         break;
       default:
         // Optional: Handle cases where backgroundCode is not recognized

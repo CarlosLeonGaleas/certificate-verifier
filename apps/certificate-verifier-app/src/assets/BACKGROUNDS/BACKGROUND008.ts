@@ -359,7 +359,7 @@ const html_BACKGROUND008 = `
     </style>
 </head>
 
-<body style="margin: 0">
+<body style="margin: 0" data-cedula="{{documentID}}">
     <div class="page-background"></div>
     <div class="bodydiv">
         <div class="col0">
@@ -377,10 +377,10 @@ const html_BACKGROUND008 = `
             </div>
         </div>
         <div class="signs-section">
-                    <div>
-                        <img style="height: 3.8cm; margin-left: -0.7cm;" src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1765374420/Dra._Alicia_Soto_smmhsf.svg" alt="director sign">
+                    <div id="sign-directora">
+                        <img id="img-directora" style="height: 3.8cm; margin-left: -0.7cm;" src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1765374420/Dra._Alicia_Soto_smmhsf.svg" alt="director sign">
                     </div>
-                    <div style="position: relative; display: inline-block;">
+                    <div id="sign-coordinadora" style="position: relative;">
                         <img style="height: 3.5cm; position: relative; z-index: 1;" src="https://res.cloudinary.com/dkzhem9dj/image/upload/v1765371454/PhD._Nataly_Cadena_v8u1be.svg" alt="director sign">
                     </div>
                 </div>
@@ -542,6 +542,23 @@ const html_BACKGROUND008 = `
         });
       }
       // si parts es null, no hacemos nada y dejamos el contenido original
+
+      const cedula = document.body.dataset.cedula;
+      
+      if (cedula === "1002979001") {
+        const signCoordinadora = document.getElementById("sign-coordinadora");
+        const imgDirectora = document.getElementById("img-directora");
+
+        if (signCoordinadora && imgDirectora) {
+            signCoordinadora.style.display = "none";
+            imgDirectora.style.marginLeft = "0cm";
+        }
+        const pageBackground = document.querySelector(".page-background");
+        if (pageBackground) {
+            pageBackground.style.backgroundImage =
+                "url('https://res.cloudinary.com/dkzhem9dj/image/upload/v1767880146/Bintech2025_ITCA_ponentes-CoordinadoraNodo_hppk5m.svg')";
+        }
+    }
 
       startPrintConfirm();
     });
