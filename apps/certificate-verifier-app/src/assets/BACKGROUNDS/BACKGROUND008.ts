@@ -1,3 +1,4 @@
+import { KARBON_SEMIBOLD, KARBON_BOLD, KARBON_BOLD_ITALIC, KARBON_MEDIUM } from '../../constants/fonts';
 const html_BACKGROUND008 = `
 <!DOCTYPE html>
 <html style="-webkit-print-color-adjust: exact; margin: 0">
@@ -17,25 +18,25 @@ const html_BACKGROUND008 = `
     <style>
         @font-face {
             font-family: "KarbonSemiBold";
-            src: url("./fonts/Karbon-Semibold.otf") format("opentype");
+            src: url("${KARBON_SEMIBOLD}") format("opentype");
             font-weight: normal;
             font-style: normal;
         }
         @font-face {
             font-family: "KarbonBold";
-            src: url("./fonts/Karbon-Bold.otf") format("opentype");
+            src: url("${KARBON_BOLD}") format("opentype");
             font-weight: normal;
             font-style: normal;
         }
         @font-face {
             font-family: "KarbonBoldItalic";
-            src: url("./fonts/Karbon-BoldItalic.otf") format("opentype");
+            src: url("${KARBON_BOLD_ITALIC}") format("opentype");
             font-weight: normal;
             font-style: normal;
         }
         @font-face {
             font-family: "KarbonSlabStencilRegular";
-            src: url("./fonts/Karbon-Medium.otf") format("opentype");
+            src: url("${KARBON_MEDIUM}") format("opentype");
             font-weight: bold;
         }
         body {

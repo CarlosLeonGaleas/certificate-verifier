@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "buildfonts": "bun run scripts/generateFontBase64.ts",
     "build": "tsc -b --noEmitOnError false && vite build",
     "build:production": "tsc -b && vite build",
     "build:skip-check": "vite build",
