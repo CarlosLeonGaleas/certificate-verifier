@@ -36,6 +36,7 @@ import html_BACKGROUND003 from '../assets/BACKGROUNDS/BACKGROUND003';
 import html_BACKGROUND005 from '../assets/BACKGROUNDS/BACKGROUND005';
 import html_BACKGROUND006 from '../assets/BACKGROUNDS/BACKGROUND006';
 import html_BACKGROUND008 from '../assets/BACKGROUNDS/BACKGROUND008';
+import html_BACKGROUND009 from '../assets/BACKGROUNDS/BACKGROUND009';
 
 const getTypeValue = (value: string): string => {
   const parts = value.split('|');
@@ -110,15 +111,27 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
       case 'BACKGROUND008':
         html_template_BACKGROUND = html_BACKGROUND008;
         urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
-        let variant;
+        let variant8;
         if (nameCourse.includes(':')) {
-          [variant] = nameCourse.split(':').map(s => s.trim());
+          [variant8] = nameCourse.split(':').map(s => s.trim());
         } else {
-          variant = 'PONENTE'; // Or handle default case
+          variant8 = 'PONENTE'; // Or handle default case
         }
-        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant.toUpperCase());
+        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant8.toUpperCase());
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
         break;
+      case 'BACKGROUND009':
+          html_template_BACKGROUND = html_BACKGROUND009;
+          urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
+          let variant9;
+          if (nameCourse.includes(':')) {
+            [variant9] = nameCourse.split(':').map(s => s.trim());
+          } else {
+            variant9 = 'ASISTENTE'; // Or handle default case
+          }
+          html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant9.toUpperCase());
+          html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
+          break;
       default:
         // Optional: Handle cases where backgroundCode is not recognized
         html_template_BACKGROUND = html_BACKGROUND003;
