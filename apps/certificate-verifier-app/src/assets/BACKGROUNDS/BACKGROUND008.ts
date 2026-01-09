@@ -366,7 +366,7 @@ const html_BACKGROUND008 = `
         </div>
         <div class="col1">
             <div class="name-participant-section">
-                <h1 class="montserrat-bold-text">CONFIEREN EL PRESENTE CERTIFICADO DE PONENTE A:</h1>
+                <h1 class="montserrat-bold-text">CONFIEREN EL PRESENTE CERTIFICADO DE {{variant}} A:</h1>
                 <h1 class="participant-name"><strong>{{name}}</strong></h1>
                 <h1 class="participant-cedula"><strong>{{cedula}}</strong></h1>
                 <!-- <hr> -->

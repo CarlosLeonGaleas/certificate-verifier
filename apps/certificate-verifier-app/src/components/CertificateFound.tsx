@@ -140,7 +140,7 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
     let url_blockchain;
     if (certificateData.hash) {
       url_blockchain = `https://polygonscan.com/tx/${certificateData.hash}#eventlog`;
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHash}}', 'Hash: ' + certificateData.hash);
+      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHash}}', certificateData.hash);
       html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-hash}}', urlHash);
     }
     else {
