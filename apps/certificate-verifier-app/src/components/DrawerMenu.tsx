@@ -1,8 +1,7 @@
 import { styled } from '@mui/material/styles';
 import type { CSSObject, Theme } from '@mui/system';
 
-import { List, Box, Divider } from '@mui/material';
-import MuiDrawer from '@mui/material/Drawer';
+import { List, Box, Divider, Drawer as MuiDrawer } from '@mui/material';
 import type { DrawerProps as MuiDrawerProps } from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -14,10 +13,7 @@ import { useInstitution } from '../contexts/InstitutionContext'
 
 const InvestigacionLogoVerticalBlanco = '/Investigacion_LogoVerticalBlanco.svg'
 
-const drawerWidth = 260
-
 const openedMixin = (theme: Theme): CSSObject => ({
-  width: drawerWidth,
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.enteringScreen
@@ -37,21 +33,25 @@ const closedMixin = (theme: Theme): CSSObject => ({
   }
 })
 
-interface DrawerProps extends MuiDrawerProps {
+interface StyledDrawerProps extends MuiDrawerProps {
   open: boolean
+  drawerwidth: number
 }
 
-const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== 'open'
-})<DrawerProps>(({ theme, open }) => ({
-  width: drawerWidth,
+const StyledDrawer = styled(MuiDrawer, {
+  shouldForwardProp: (prop) => prop !== 'open' && prop !== 'drawerwidth'
+})<StyledDrawerProps>(({ theme, open, drawerwidth }) => ({
+  width: drawerwidth,
   flexShrink: 0,
   whiteSpace: 'nowrap',
   boxSizing: 'border-box',
   ...(open
     ? {
       ...openedMixin(theme),
-      '& .MuiDrawer-paper': openedMixin(theme)
+      '& .MuiDrawer-paper': {
+        ...openedMixin(theme),
+        width: drawerwidth,
+      }
     }
     : {
       ...closedMixin(theme),
@@ -70,28 +70,15 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 type DrawerMenuProps = {
   open: boolean
   handleClose: () => void
+  isMobile: boolean
+  drawerWidth: number
 }
 
-const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
+const DrawerMenu = ({ open, handleClose, isMobile, drawerWidth }: DrawerMenuProps) => {
   const { config, isITCA } = useInstitution()
 
-  return (
-    <Drawer
-      variant="permanent"
-      open={open}
-      sx={{
-        '& .MuiDrawer-paper': {
-          backgroundColor: config.drawerBgColor,
-          color: 'white',
-          borderBlockColor: config.drawerBgColor,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          height: '100vh',
-          borderRight: 'none'
-        }
-      }}
-    >
+  const drawerContent = (
+    <>
       <Box>
         <DrawerHeader
           sx={{
@@ -131,7 +118,7 @@ const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
         )}
         <List>
           {drawerItemsVerifier.map((item) => (
-            <DrawerItem key={item.text} label={item.text} icon={item.icon} />
+            <DrawerItem key={item.text} label={item.text} icon={item.icon} onNavigate={isMobile ? handleClose : undefined} />
           ))}
         </List>
         <Divider />
@@ -154,7 +141,7 @@ const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
         )}
         <List>
           {drawerItemsSearch.map((item) => (
-            <DrawerItem key={item.text} label={item.text} icon={item.icon} />
+            <DrawerItem key={item.text} label={item.text} icon={item.icon} onNavigate={isMobile ? handleClose : undefined} />
           ))}
         </List>
       </Box>
@@ -168,7 +155,55 @@ const DrawerMenu = ({ open, handleClose }: DrawerMenuProps) => {
           />
         )}
       </Box>
-    </Drawer>
+    </>
+  )
+
+  const drawerStyles = {
+    '& .MuiDrawer-paper': {
+      backgroundColor: config.drawerBgColor,
+      color: 'white',
+      borderBlockColor: config.drawerBgColor,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      height: '100vh',
+      borderRight: 'none'
+    }
+  }
+
+  // Drawer temporal para móvil (overlay)
+  if (isMobile) {
+    return (
+      <MuiDrawer
+        variant="temporary"
+        open={open}
+        onClose={handleClose}
+        ModalProps={{
+          keepMounted: true, // Mejor rendimiento en móvil
+        }}
+        sx={{
+          ...drawerStyles,
+          '& .MuiDrawer-paper': {
+            ...drawerStyles['& .MuiDrawer-paper'],
+            width: drawerWidth,
+          },
+        }}
+      >
+        {drawerContent}
+      </MuiDrawer>
+    )
+  }
+
+  // Drawer permanente para desktop
+  return (
+    <StyledDrawer
+      variant="permanent"
+      open={open}
+      drawerwidth={drawerWidth}
+      sx={drawerStyles}
+    >
+      {drawerContent}
+    </StyledDrawer>
   )
 }
 

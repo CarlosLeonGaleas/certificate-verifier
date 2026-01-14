@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useTheme, useMediaQuery, Box } from '@mui/material'
 import AppBarCustom from './components/AppBarCustom'
 import DrawerMenu from './components/DrawerMenu'
 import HomePage from './components/HomePage'
@@ -9,73 +10,97 @@ import StepLoader from './components/StepLoader'
 import DocumentIdPage from './components/DocumentIdPage'
 import { InstitutionProvider } from './contexts/InstitutionContext'
 
-function App() {
-  const [openOptions, setOpenOptions] = useState(true)
+const drawerWidth = 260
 
-  const drawerWidth = openOptions ? 260 : 65
-  const appBarHeight = 64
+function App() {
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [desktopOpen, setDesktopOpen] = useState(true)
+  
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+
+  const handleDrawerToggle = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen)
+    } else {
+      setDesktopOpen(!desktopOpen)
+    }
+  }
+
+  const handleDrawerClose = () => {
+    if (isMobile) {
+      setMobileOpen(false)
+    } else {
+      setDesktopOpen(false)
+    }
+  }
 
   return (
     <Router>
       <InstitutionProvider>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-          {/* AppBar arriba */}
+        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+          {/* AppBar */}
           <AppBarCustom
-            openOptions={openOptions}
-            handleDrawerToggle={() => setOpenOptions(!openOptions)}
+            openOptions={isMobile ? mobileOpen : desktopOpen}
+            handleDrawerToggle={handleDrawerToggle}
+            isMobile={isMobile}
           />
 
-          {/* Área principal */}
-          <div style={{ display: 'flex', flex: 1, width: '100%' }}>
-            {/* Drawer a la izquierda */}
-            <div style={{ width: drawerWidth, transition: 'width 0.3s' }}>
-              <DrawerMenu open={openOptions} handleClose={() => setOpenOptions(false)} />
-            </div>
+          {/* Drawer */}
+          <DrawerMenu
+            open={isMobile ? mobileOpen : desktopOpen}
+            handleClose={handleDrawerClose}
+            isMobile={isMobile}
+            drawerWidth={drawerWidth}
+          />
 
-            {/* Contenido dinámico a la derecha */}
-            <main
-              style={{
-                flexGrow: 1,
-                backgroundColor: '#f0f0f0',
-                marginTop: `${appBarHeight}px`,
-                height: 'auto',
-                overflow: 'auto',
-                width: '100%',
-                minHeight: `calc(100vh - ${appBarHeight}px)`,
-                maxHeight: '100%'
-              }}
-            >
-              <Routes>
-                {/* Rutas por defecto */}
-                <Route path="/" element={<HomePage />} />
-                <Route path="/hash" element={<HashVerifierPage />} />
-                <Route path="/hash/:hash" element={<HashVerifierPage />} />
-                <Route path="/id" element={<IdVerifierPage />} />
-                <Route path="/id/:tokenId" element={<IdVerifierPage />} />
-                <Route path="/documentId" element={<DocumentIdPage />} />
-                <Route path="/documentId/:documentId" element={<DocumentIdPage />} />
-                <Route path="/institution" element={<HomePage />} />
-                <Route path="/loader" element={
-                  <StepLoader
-                    finalSuccess={true}
-                    active={true}
-                    completed={true}
-                    onFinish={() => console.log('Animation finished')}
-                  />
-                } />
+          {/* Contenido principal */}
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              backgroundColor: '#f0f0f0',
+              height: 'auto',
+              overflow: 'auto',
+              mt: { xs: 7, sm: 8 }, // Margen top para el AppBar
+              ml: isMobile ? 0 : (desktopOpen ? 0 : 0), // En desktop, el drawer empuja el contenido
+              width: isMobile ? '100%' : (desktopOpen ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${theme.spacing(8)} - 1px)`),
+              transition: theme.transitions.create(['margin', 'width'], {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.leavingScreen,
+              }),
+            }}
+          >
+            <Routes>
+              {/* Rutas por defecto */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/hash" element={<HashVerifierPage />} />
+              <Route path="/hash/:hash" element={<HashVerifierPage />} />
+              <Route path="/id" element={<IdVerifierPage />} />
+              <Route path="/id/:tokenId" element={<IdVerifierPage />} />
+              <Route path="/documentId" element={<DocumentIdPage />} />
+              <Route path="/documentId/:documentId" element={<DocumentIdPage />} />
+              <Route path="/institution" element={<HomePage />} />
+              <Route path="/loader" element={
+                <StepLoader
+                  finalSuccess={true}
+                  active={true}
+                  completed={true}
+                  onFinish={() => console.log('Animation finished')}
+                />
+              } />
 
-                {/* Rutas ITCA */}
-                <Route path="/ITCA" element={<HomePage />} />
-                <Route path="/ITCA/hash" element={<HashVerifierPage />} />
-                <Route path="/ITCA/hash/:hash" element={<HashVerifierPage />} />
-                <Route path="/ITCA/id" element={<IdVerifierPage />} />
-                <Route path="/ITCA/id/:tokenId" element={<IdVerifierPage />} />
-                <Route path="/ITCA/documentId" element={<DocumentIdPage />} />
-                <Route path="/ITCA/documentId/:documentId" element={<DocumentIdPage />} />
-              </Routes>
-            </main>
-          </div>
-        </div>
+              {/* Rutas ITCA */}
+              <Route path="/ITCA" element={<HomePage />} />
+              <Route path="/ITCA/hash" element={<HashVerifierPage />} />
+              <Route path="/ITCA/hash/:hash" element={<HashVerifierPage />} />
+              <Route path="/ITCA/id" element={<IdVerifierPage />} />
+              <Route path="/ITCA/id/:tokenId" element={<IdVerifierPage />} />
+              <Route path="/ITCA/documentId" element={<DocumentIdPage />} />
+              <Route path="/ITCA/documentId/:documentId" element={<DocumentIdPage />} />
+            </Routes>
+          </Box>
+        </Box>
       </InstitutionProvider>
     </Router>
   )

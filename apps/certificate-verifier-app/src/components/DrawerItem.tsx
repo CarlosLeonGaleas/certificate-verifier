@@ -6,6 +6,7 @@ import { useInstitution } from '../contexts/InstitutionContext';
 interface DrawerItemProps {
   label: string;
   icon: React.ElementType;
+  onNavigate?: () => void;
 }
 
 function handleRoute(option: string, isITCA: boolean): string {
@@ -26,13 +27,21 @@ function handleRoute(option: string, isITCA: boolean): string {
   }
 }
 
-const DrawerItem: FC<DrawerItemProps> = ({ label, icon: Icon }) => {
+const DrawerItem: FC<DrawerItemProps> = ({ label, icon: Icon, onNavigate }) => {
   const navigate = useNavigate();
   const { isITCA } = useInstitution();
   
+  const handleClick = () => {
+    navigate(handleRoute(label, isITCA));
+    // Cerrar el drawer en móvil después de navegar
+    if (onNavigate) {
+      onNavigate();
+    }
+  };
+  
   return (
     <ListItem key={label} disablePadding sx={{ display: 'block' }}>
-      <ListItemButton onClick={() => navigate(handleRoute(label, isITCA))}>
+      <ListItemButton onClick={handleClick}>
         <ListItemIcon>
           <Icon style={{ color: 'white' }} />
         </ListItemIcon>
