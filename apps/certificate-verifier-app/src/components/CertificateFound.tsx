@@ -1,4 +1,3 @@
-// Suggested code may be subject to a license. Learn more: ~LicenseLog:3002747772.
 import React from 'react';
 import { Certificate } from "@certificate-verifier/core"
 import QRCode from 'qrcode';
@@ -10,6 +9,9 @@ import {
   Button,
   Avatar,
   Divider,
+  useTheme,
+  useMediaQuery,
+  Container,
 } from '@mui/material';
 import {
   CalendarToday,
@@ -57,7 +59,6 @@ const replacePipeWithComma = (value: string): string => {
   return value.includes('|') ? value.replace(/\|/g, ', ') : value;
 };
 
-// Generate QR Code based on url
 const getTransactionHashQRCode = async (url: string) => {
   try {
     const transactionHashQRCode = await QRCode.toDataURL(url);
@@ -67,7 +68,6 @@ const getTransactionHashQRCode = async (url: string) => {
     throw error;
   }
 };
-
 
 const generateCertificateHTML = (certificateData: Certificate.InfoType, transactionHashQRBase64: string) => {
   try {
@@ -115,34 +115,31 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
         if (nameCourse.includes(':')) {
           [variant8] = nameCourse.split(':').map(s => s.trim());
         } else {
-          variant8 = 'PONENTE'; // Or handle default case
+          variant8 = 'PONENTE';
         }
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant8.toUpperCase());
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
         break;
       case 'BACKGROUND009':
-          html_template_BACKGROUND = html_BACKGROUND009;
-          urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
-          let variant9;
-          if (nameCourse.includes(':')) {
-            [variant9] = nameCourse.split(':').map(s => s.trim());
-          } else {
-            variant9 = 'ASISTENTE'; // Or handle default case
-          }
-          html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant9.toUpperCase());
-          html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
-          break;
+        html_template_BACKGROUND = html_BACKGROUND009;
+        urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
+        let variant9;
+        if (nameCourse.includes(':')) {
+          [variant9] = nameCourse.split(':').map(s => s.trim());
+        } else {
+          variant9 = 'ASISTENTE';
+        }
+        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant9.toUpperCase());
+        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
+        break;
       default:
-        // Optional: Handle cases where backgroundCode is not recognized
         html_template_BACKGROUND = html_BACKGROUND003;
         break;
     }
 
-    // Reemplazar los placeholders comunes
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{web-title}}', `${certificateData.tokenId}-${typeCertificate}-${certificateData.name}-${(function (text, maxLength) {
       return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-    })(nameCourse, 25)
-      }`);
+    })(nameCourse, 25)}`);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHashQRBase64}}', transactionHashQRBase64);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{name}}', certificateData.name);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{cedula}}', certificateData.documentId);
@@ -155,8 +152,7 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
       url_blockchain = `https://polygonscan.com/tx/${certificateData.hash}#eventlog`;
       html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHash}}', certificateData.hash);
       html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-hash}}', urlHash);
-    }
-    else {
+    } else {
       url_blockchain = `https://polygonscan.com/nft/0xa447784327062ffaa976142b7636b4346e81965b/${certificateData.tokenId}`;
       html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHash}}', '');
       html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-hash}}', '');
@@ -164,8 +160,6 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-blockchain}}', url_blockchain);
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-tokenid}}', urlTokenId);
 
-
-    // Abrir una nueva pestaña con el HTML generado
     const newWindow = window.open();
     newWindow.document.open();
     newWindow.document.write(html_template_BACKGROUND);
@@ -175,7 +169,6 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
   }
 };
 
-
 const openCertificateHTML = async (certificateData: Certificate.InfoType) => {
   try {
     console.log("Certificate Data:", certificateData);
@@ -183,19 +176,17 @@ const openCertificateHTML = async (certificateData: Certificate.InfoType) => {
     if (certificateData.institution.includes('ITCA')) {
       if (certificateData.hash) {
         url = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
-      }
-      else {
+      } else {
         url = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/id/${certificateData.tokenId}`;
       }
-    }else{
+    } else {
       if (certificateData.hash) {
         url = `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
-      }
-      else {
+      } else {
         url = `https://d1uys4mzmfaahs.cloudfront.net/id/${certificateData.tokenId}`;
       }
     }
-    
+
     const transactionHashQRBase64 = await getTransactionHashQRCode(url);
     generateCertificateHTML(certificateData, transactionHashQRBase64);
   } catch (error) {
@@ -220,6 +211,10 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   hash,
 }) => {
   const { config } = useInstitution();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
   const InfoItem = ({ icon: Icon, label, value }) => {
     if (!value && value !== 0) return null;
 
@@ -227,23 +222,43 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
       <Paper
         elevation={1}
         sx={{
-          p: 2,
+          p: { xs: 1.5, sm: 2 },
           display: 'flex',
           alignItems: 'flex-start',
-          gap: 2,
+          gap: { xs: 1, sm: 2 },
           borderRadius: 2,
           transition: 'background-color 0.2s',
           '&:hover': { bgcolor: 'grey.100' },
         }}
       >
-        <Avatar sx={{ bgcolor: config.primaryColor, width: 40, height: 40 }}>
-          <Icon sx={{ color: 'white', fontSize: 20 }} />
+        <Avatar 
+          sx={{ 
+            bgcolor: config.primaryColor, 
+            width: { xs: 32, sm: 40 }, 
+            height: { xs: 32, sm: 40 }
+          }}
+        >
+          <Icon sx={{ color: 'white', fontSize: { xs: 16, sm: 20 } }} />
         </Avatar>
-        <Box>
-          <Typography variant="caption" color="text.secondary" gutterBottom>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography 
+            variant="caption" 
+            color="text.secondary" 
+            gutterBottom
+            sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem'}, textAlign: 'justify',
+            display: 'block'}}
+          >
             <strong>{label}</strong>
           </Typography>
-          <Typography variant="body1" sx={{ wordBreak: 'break-word', fontWeight: 500 }}>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              wordBreak: 'break-word', 
+              fontWeight: 500,
+              textAlign: 'justify',
+              fontSize: { xs: '0.875rem', sm: '1rem' }
+            }}
+          >
             {value}
           </Typography>
         </Box>
@@ -252,182 +267,237 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   };
 
   return (
-    <Box
-      maxWidth="900px"
-      mx="auto"
-      mt={8}
-      bgcolor="background.paper"
-      borderRadius={3}
-      boxShadow={3}
-      overflow="hidden"
-      border={1}
-      borderColor="grey.300"
-    >
-      {/* Header */}
+    <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 2 } }}>
       <Box
         sx={{
-          px: 6,
-          py: 6,
-          textAlign: 'center',
-          background: config.certificateFoundColor,
-          color: 'white',
+          mx: 'auto',
+          mt: { xs: 4, sm: 6, md: 8 },
+          bgcolor: 'background.paper',
+          borderRadius: { xs: 2, sm: 3 },
+          boxShadow: 3,
+          overflow: 'hidden',
+          border: 1,
+          borderColor: 'grey.300',
         }}
       >
+        {/* Header */}
         <Box
           sx={{
-            width: 64,
-            height: 64,
-            mx: 'auto',
-            mb: 2,
-            bgcolor: 'white',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            px: { xs: 3, sm: 4, md: 6 },
+            py: { xs: 3, sm: 4, md: 6 },
+            textAlign: 'center',
+            background: config.certificateFoundColor,
+            color: 'white',
           }}
         >
-          <MilitaryTech sx={{ fontSize: 32, color: config.primaryColor }} />
-        </Box>
-        <Typography variant="h5" fontWeight="bold" mb={1}>
-          Certificado Encontrado en la Blockchain
-        </Typography>
-        {/* <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
-          <Verified sx={{ color: 'lightgreen' }} />
-          <Typography color="grey.100">Existencia Confirmada</Typography>
-        </Box> */}
-      </Box>
-
-      {/* Content */}
-      <Box p={4}>
-        {/* Información Principal */}
-        <Box mb={3}>
-          <Typography variant="h6" fontWeight={600} mb={3} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Person /> Información del Certificado
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <InfoItem icon={Person} label="Beneficiario" value={name} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <InfoItem icon={Cedula} label="Cédula del Beneficiario" value={documentId} />
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Descripción */}
-        <Box mb={3}>
-          <InfoItem icon={EmojiEvents} label="Título del Certificado" value={getTitleValue(course)} />
-        </Box>
-        <Box mb={5}>
-          <InfoItem icon={Description} label="Descripción" value={description} />
-        </Box>
-
-        {/* Información Institucional */}
-        <Box mb={5}>
-          <Typography variant="h6" fontWeight={600} mb={3} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Apartment /> Información Institucional
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <InfoItem icon={Apartment} label="Institución Emisora" value={institution} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <InfoItem icon={Apartment} label="Área Emisora" value={area} />
-            </Grid>
-            <Grid item xs={12}>
-              <InfoItem icon={Groups} label="Firmantes" value={replacePipeWithComma(signatoryName)} />
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Fechas y Duración */}
-        <Box mb={5}>
-          <Typography variant="h6" fontWeight={600} mb={3} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CalendarToday /> Fechas y Duración
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
-              <InfoItem icon={CalendarToday} label="Fecha de Emisión" value={issuedDate} />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <InfoItem icon={CalendarToday} label="Fecha de Inicio" value={startDate} />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <InfoItem icon={CalendarToday} label="Fecha de Fin" value={endDate} />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <InfoItem icon={AccessTime} label="Duración" value={hoursWorked} />
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Información Técnica */}
-        <Box mb={5}>
-          <Typography variant="h6" fontWeight={600} mb={3} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Blockchain /> Información Técnica (Blockchain)
-          </Typography>
-          <Box mb={3}>
-            <InfoItem icon={Id} label="Token ID" value={tokenId} />
+          <Box
+            sx={{
+              width: { xs: 48, sm: 56, md: 64 },
+              height: { xs: 48, sm: 56, md: 64 },
+              mx: 'auto',
+              mb: { xs: 1.5, sm: 2 },
+              bgcolor: 'white',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <MilitaryTech 
+              sx={{ 
+                fontSize: { xs: 24, sm: 28, md: 32 }, 
+                color: config.primaryColor 
+              }} 
+            />
           </Box>
-          <Box mb={3}>
-            <InfoItem icon={Hash} label="Hash de la Transacción" value={hash} />
-          </Box>
-          <Box mb={3}>
-            <InfoItem icon={CalendarToday} label="Fecha y Hora de Registro en la Blockchain" value={issueAt} />
-          </Box>
+          <Typography 
+            variant={isMobile ? 'h6' : 'h5'}
+            fontWeight="bold" 
+            mb={1}
+            sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' } }}
+          >
+            Certificado Encontrado en la Blockchain
+          </Typography>
         </Box>
 
-        {/* Botón de Descarga */}
-        {getBackgroundCode(course).includes('BACKGROUND') && hash && (
-          <>
-            <Divider sx={{ mb: 3 }} />
-            <Box display="flex" justifyContent="center">
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<Download />}
-                onClick={() =>
-                  openCertificateHTML({
-                    tokenId,
-                    documentId,
-                    name,
-                    course,
-                    description,
-                    institution,
-                    area,
-                    issueAt,
-                    startDate,
-                    endDate,
-                    issuedDate,
-                    hoursWorked,
-                    signatoryName,
-                    hash,
-                  })
-                }
-                sx={{
-                  backgroundColor: '#27348b',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: { xs: '1rem', sm: '1.1rem' },
-                  py: { xs: 1.5, sm: 2 },
-                  px: { xs: 3, sm: 4 },
-                  borderRadius: '12px',
-                  boxShadow: `0 4px 16px #27348b 40`,
-                  '&:hover': {
-                    backgroundColor: 'rgb(63, 81, 181)',
-                    boxShadow: `0 6px 20px #27348b 50`,
-                    transform: 'translateY(-2px)'
-                  },
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                Descargar Certificado Digital
-              </Button>
+        {/* Content */}
+        <Box p={{ xs: 2, sm: 3, md: 4 }}>
+          {/* Información Principal */}
+          <Box mb={{ xs: 2, sm: 3 }}>
+            <Typography 
+              variant="h6" 
+              fontWeight={600} 
+              mb={{ xs: 2, sm: 3 }}
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
+                fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' }
+              }}
+            >
+              <Person sx={{ fontSize: { xs: 20, sm: 24 } }} /> 
+              Información del Certificado
+            </Typography>
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
+              <Grid item xs={12} md={6}>
+                <InfoItem icon={Person} label="Beneficiario" value={name} />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <InfoItem icon={Cedula} label="Cédula del Beneficiario" value={documentId} />
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* Descripción */}
+          <Box mb={{ xs: 2, sm: 3 }}>
+            <InfoItem icon={EmojiEvents} label="Título del Certificado" value={getTitleValue(course)} />
+          </Box>
+          <Box mb={{ xs: 3, sm: 4, md: 5 }}>
+            <InfoItem icon={Description} label="Descripción" value={description} />
+          </Box>
+
+          {/* Información Institucional */}
+          <Box mb={{ xs: 3, sm: 4, md: 5 }}>
+            <Typography 
+              variant="h6" 
+              fontWeight={600} 
+              mb={{ xs: 2, sm: 3 }}
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
+                fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' }
+              }}
+            >
+              <Apartment sx={{ fontSize: { xs: 20, sm: 24 } }} /> 
+              Información Institucional
+            </Typography>
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
+              <Grid item xs={12} md={6}>
+                <InfoItem icon={Apartment} label="Institución Emisora" value={institution} />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <InfoItem icon={Apartment} label="Área Emisora" value={area} />
+              </Grid>
+              <Grid item xs={12}>
+                <InfoItem icon={Groups} label="Firmantes" value={replacePipeWithComma(signatoryName)} />
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* Fechas y Duración */}
+          <Box mb={{ xs: 3, sm: 4, md: 5 }}>
+            <Typography 
+              variant="h6" 
+              fontWeight={600} 
+              mb={{ xs: 2, sm: 3 }}
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
+                fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' }
+              }}
+            >
+              <CalendarToday sx={{ fontSize: { xs: 20, sm: 24 } }} /> 
+              Fechas y Duración
+            </Typography>
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
+              <Grid item xs={12} sm={6} md={4}>
+                <InfoItem icon={CalendarToday} label="Fecha de Emisión" value={issuedDate} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <InfoItem icon={CalendarToday} label="Fecha de Inicio" value={startDate} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <InfoItem icon={CalendarToday} label="Fecha de Fin" value={endDate} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <InfoItem icon={AccessTime} label="Duración" value={hoursWorked} />
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* Información Técnica */}
+          <Box mb={{ xs: 3, sm: 4, md: 5 }}>
+            <Typography 
+              variant="h6" 
+              fontWeight={600} 
+              mb={{ xs: 2, sm: 3 }}
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
+                fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' }
+              }}
+            >
+              <Blockchain sx={{ fontSize: { xs: 20, sm: 24 } }} /> 
+              Información Técnica (Blockchain)
+            </Typography>
+            <Box mb={{ xs: 2, sm: 3 }}>
+              <InfoItem icon={Id} label="Token ID" value={tokenId} />
             </Box>
-          </>
-        )}
+            <Box mb={{ xs: 2, sm: 3 }}>
+              <InfoItem icon={Hash} label="Hash de la Transacción" value={hash} />
+            </Box>
+            <Box mb={{ xs: 2, sm: 3 }}>
+              <InfoItem icon={CalendarToday} label="Fecha y Hora de Registro en la Blockchain" value={issueAt} />
+            </Box>
+          </Box>
+
+          {/* Botón de Descarga */}
+          {getBackgroundCode(course).includes('BACKGROUND') && hash && (
+            <>
+              <Divider sx={{ mb: { xs: 2, sm: 3 } }} />
+              <Box display="flex" justifyContent="center">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={!isMobile && <Download />}
+                  fullWidth={isMobile}
+                  onClick={() =>
+                    openCertificateHTML({
+                      tokenId,
+                      documentId,
+                      name,
+                      course,
+                      description,
+                      institution,
+                      area,
+                      issueAt,
+                      startDate,
+                      endDate,
+                      issuedDate,
+                      hoursWorked,
+                      signatoryName,
+                      hash,
+                    })
+                  }
+                  sx={{
+                    maxWidth: { xs: '100%', sm: 'auto' },
+                    backgroundColor: '#27348b',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: { xs: '0.875rem', sm: '1rem', md: '1.1rem' },
+                    py: { xs: 1.25, sm: 1.5, md: 2 },
+                    px: { xs: 3, sm: 3, md: 4 },
+                    borderRadius: '12px',
+                    boxShadow: `0 4px 16px #27348b40`,
+                    '&:hover': {
+                      backgroundColor: 'rgb(63, 81, 181)',
+                      boxShadow: `0 6px 20px #27348b50`,
+                      transform: 'translateY(-2px)'
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {isMobile ? 'Descargar' : 'Descargar Certificado Digital'}
+                </Button>
+              </Box>
+            </>
+          )}
+        </Box>
       </Box>
-    </Box>
+    </Container>
   );
 };
 

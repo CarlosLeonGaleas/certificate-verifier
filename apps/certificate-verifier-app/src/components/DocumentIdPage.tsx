@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import { Box } from '@mui/material';
-import { Typography } from '@mui/material';
+import { TextField, Button, Box, Typography, Container, useTheme, useMediaQuery } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CertificateFound from './CertificateFound';
 import CertificateNotFound from './CertificateNotFound';
@@ -32,7 +29,6 @@ const getCertificates = async (documentId: string = ''): Promise<any[][] | null>
             return null;
         }
 
-        // Verificar que la respuesta sea JSON
         const contentType = response.headers.get('content-type');
         if (!contentType?.includes('application/json')) {
             console.error('La respuesta no es JSON');
@@ -46,7 +42,6 @@ const getCertificates = async (documentId: string = ''): Promise<any[][] | null>
         return null;
     }
 };
-
 
 const countCertificates = async (documentId: string = ''): Promise<number> => {
     try {
@@ -62,7 +57,6 @@ const countCertificates = async (documentId: string = ''): Promise<number> => {
             return 0;
         }
 
-        // Verificar que la respuesta sea JSON
         const contentType = response.headers.get('content-type');
         if (!contentType?.includes('application/json')) {
             console.error('La respuesta no es JSON');
@@ -89,6 +83,9 @@ const DocumentIdPage: React.FC = () => {
     const [loaderCompleted, setLoaderCompleted] = useState(false);
 
     const { config } = useInstitution();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
     const fetchedOnce = useRef(false);
 
@@ -120,7 +117,6 @@ const DocumentIdPage: React.FC = () => {
                 const certificatesData = await getCertificates(documentIdToVerify);
                 setCertificateFound(true);
                 setCertificateData(certificatesData);
-                //setCertificateData(result);
             } else {
                 setCertificateFound(false);
                 setCertificateData(null);
@@ -133,29 +129,38 @@ const DocumentIdPage: React.FC = () => {
         setLoaderCompleted(true);
     };
 
-
     const renderContent = () => {
         return (
-            <div
-                style={{
+            <Box
+                sx={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    marginTop: '20px',
-                    textAlign: 'left'
+                    mt: { xs: 2, sm: 3, md: 4 }
                 }}
             >
                 {loaderActive && (
-                    <StepLoader
-                        finalSuccess={certificateFound}
-                        active={loaderActive}
-                        completed={loaderCompleted}
-                        onFinish={() => handleAnimationFinished()} // 👈 Mostrar resultados solo cuando animación termina
-                    />
+                    <Box sx={{ 
+                        width: '100%', 
+                        display: 'flex', 
+                        justifyContent: 'center',
+                        px: { xs: 1, sm: 2 }
+                    }}>
+                        <StepLoader
+                            finalSuccess={certificateFound}
+                            active={loaderActive}
+                            completed={loaderCompleted}
+                            onFinish={() => handleAnimationFinished()}
+                        />
+                    </Box>
                 )}
-                {/* Mostrar los resultados debajo del loader si ya completó */}
                 {showResults && (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center',
+                        width: '100%'
+                    }}>
                         {certificateData && certificateData.length > 0 ? (
                             certificateData.map((cert, index) => (
                                 <CertificateFound
@@ -177,155 +182,181 @@ const DocumentIdPage: React.FC = () => {
                         ) : (
                             <CertificateNotFound message='No hay certificados asociados a la cédula ingresada' />
                         )}
-
-                    </div>
+                    </Box>
                 )}
-            </div>
+            </Box>
         );
     };
 
     return (
-        <div style={{ backgroundColor: 'rgb(248, 250, 252)', height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Box
-                maxWidth="900px"
-                mx="auto"
-                mt={2}
-                mb={2}
-                p={3}
-                bgcolor="background.paper"
-                borderRadius={3}
-                boxShadow={3}
-                overflow="hidden"
-                border={1}
-                borderColor="grey.300"
-                textAlign='center'
-            >
-                <Typography
-                    variant="h4"
-                    component="h1"
+        <Box 
+            sx={{ 
+                backgroundColor: 'rgb(248, 250, 252)', 
+                minHeight: '100%', 
+                width: '100%', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center'
+            }}
+        >
+            <Container maxWidth="lg">
+                <Box
                     sx={{
-                        fontWeight: 700,
-                        color: config.primaryColor,
-                        fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' },
-                        mb: 1
+                        mx: 'auto',
+                        mt: { xs: 1, sm: 2 },
+                        mb: { xs: 2, sm: 2 },
+                        p: { xs: 2, sm: 3, md: 3 },
+                        bgcolor: 'background.paper',
+                        borderRadius: 3,
+                        boxShadow: 3,
+                        overflow: 'hidden',
+                        border: 1,
+                        borderColor: 'grey.300',
+                        textAlign: 'center'
                     }}
                 >
-                    Buscar Certificados
-                </Typography>
-                <Typography
-                    variant="body2"
-                    sx={{
-                        color: 'rgb(100, 116, 139)',
-                        fontSize: { xs: '0.875rem', sm: '1rem' },
-                        mb: 3
-                    }}
-                >
-                    Ingrese su número de cédula (10 dígitos)
-                </Typography>
-                <div style={{
-                    width: '100%', marginBottom: '20px', display: 'flex', justifyContent: 'center'
-                }} >
-                    <TextField
-                        id="outlined-textarea"
-                        label="Número de cédula:"
-                        type="number"
-                        value={documentId ?? ''}
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            setDocumentId(value);
-                            if (loaderActive) {
-                                setLoaderActive(false);
-                                setLoaderCompleted(false);
-                                setShowResults(false);
-                            }
-                        }}
-                        disabled={isSearching}
+                    <Typography
+                        variant={isMobile ? 'h5' : 'h4'}
+                        component="h1"
                         sx={{
-                            '& .MuiOutlinedInput-root': {
-                                backgroundColor: 'rgb(248, 250, 252)',
-                                borderRadius: '12px',
-                                '& fieldset': {
-                                    borderColor: 'rgba(39, 52, 139, 0.12)'
-                                },
-                                '&:hover fieldset': {
-                                    borderColor: config.primaryColor
-                                },
-                                '&.Mui-focused fieldset': {
-                                    borderColor: config.primaryColor
-                                },
-                                '&.Mui-error fieldset': {
-                                    borderColor: 'rgb(211, 47, 47)'
+                            fontWeight: 700,
+                            color: config.primaryColor,
+                            fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' },
+                            mb: { xs: 1, sm: 1 }
+                        }}
+                    >
+                        Buscar Certificados
+                    </Typography>
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color: 'rgb(100, 116, 139)',
+                            fontSize: { xs: '0.875rem', sm: '1rem' },
+                            mb: { xs: 2, sm: 3 },
+                            px: { xs: 1, sm: 0 }
+                        }}
+                    >
+                        Ingrese su número de cédula
+                    </Typography>
+                    <Box 
+                        sx={{
+                            width: '100%', 
+                            mb: { xs: 2, sm: 3 }, 
+                            display: 'flex', 
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <TextField
+                            id="outlined-textarea"
+                            label="Número de cédula:"
+                            type="number"
+                            value={documentId ?? ''}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setDocumentId(value);
+                                if (loaderActive) {
+                                    setLoaderActive(false);
+                                    setLoaderCompleted(false);
+                                    setShowResults(false);
                                 }
-                            },
-                            '& .MuiInputLabel-root': {
-                                color: 'rgb(100, 116, 139)',
-                                '&.Mui-focused': {
-                                    color: config.primaryColor
+                            }}
+                            disabled={isSearching}
+                            fullWidth={isMobile}
+                            sx={{
+                                maxWidth: { xs: '100%', sm: '500px', md: '600px' },
+                                '& .MuiOutlinedInput-root': {
+                                    backgroundColor: 'rgb(248, 250, 252)',
+                                    borderRadius: '12px',
+                                    '& fieldset': {
+                                        borderColor: 'rgba(39, 52, 139, 0.12)'
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: config.primaryColor
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: config.primaryColor
+                                    },
+                                    '&.Mui-error fieldset': {
+                                        borderColor: 'rgb(211, 47, 47)'
+                                    }
                                 },
-                                '&.Mui-error': {
+                                '& .MuiInputLabel-root': {
+                                    color: 'rgb(100, 116, 139)',
+                                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                                    '&.Mui-focused': {
+                                        color: config.primaryColor
+                                    },
+                                    '&.Mui-error': {
+                                        color: 'rgb(211, 47, 47)'
+                                    }
+                                },
+                                '& .MuiOutlinedInput-input': {
+                                    color: config.primaryColor,
+                                    fontWeight: 500,
+                                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                                },
+                                '& .MuiFormHelperText-root': {
                                     color: 'rgb(211, 47, 47)'
                                 }
+                            }}
+                            slotProps={{
+                                input: {
+                                    inputProps: {
+                                        inputMode: 'numeric',
+                                        pattern: '[0-9]*',
+                                    },
+                                    sx: {
+                                        backgroundColor: 'white',
+                                        '& input[type=number]': {
+                                            MozAppearance: 'textfield',
+                                        },
+                                        '& input[type=number]::-webkit-outer-spin-button': {
+                                            WebkitAppearance: 'none',
+                                            margin: 0,
+                                        },
+                                        '& input[type=number]::-webkit-inner-spin-button': {
+                                            WebkitAppearance: 'none',
+                                            margin: 0,
+                                        },
+                                    },
+                                }
+                            }}
+                        />
+                    </Box>
+                    <Button
+                        variant="contained"
+                        onClick={() => handleVerifyCertificate(documentId)}
+                        endIcon={<SearchIcon />}
+                        disabled={isSearching || documentId.length == 0}
+                        fullWidth={isMobile}
+                        sx={{
+                            maxWidth: { xs: '100%', sm: 'auto' },
+                            backgroundColor: config.primaryColor,
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: { xs: '0.875rem', sm: '1rem', md: '1.1rem' },
+                            py: { xs: 1.25, sm: 1.5, md: 2 },
+                            px: { xs: 3, sm: 3, md: 4 },
+                            borderRadius: '12px',
+                            boxShadow: `0 4px 16px ${config.primaryColor}40`,
+                            '&:hover': {
+                                boxShadow: `0 6px 20px ${config.primaryColor}50`,
+                                transform: 'translateY(-2px)'
                             },
-                            '& .MuiOutlinedInput-input': {
-                                color: config.primaryColor,
-                                fontWeight: 500
+                            '&:disabled': {
+                                backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                                color: 'rgba(0, 0, 0, 0.26)'
                             },
-                            '& .MuiFormHelperText-root': {
-                                color: 'rgb(211, 47, 47)'
-                            }
+                            transition: 'all 0.3s ease'
                         }}
-                        slotProps={{
-                            input: {
-                                inputProps: {
-                                    inputMode: 'numeric',
-                                    pattern: '[0-9]*',
-                                },
-                                sx: {
-                                    backgroundColor: 'white',
-                                    '& input[type=number]': {
-                                        MozAppearance: 'textfield',
-                                    },
-                                    '& input[type=number]::-webkit-outer-spin-button': {
-                                        WebkitAppearance: 'none',
-                                        margin: 0,
-                                    },
-                                    '& input[type=number]::-webkit-inner-spin-button': {
-                                        WebkitAppearance: 'none',
-                                        margin: 0,
-                                    },
-                                },
-                            }
-                        }}
-                    />
-                </div>
-                <Button
-                    variant="contained"
-                    onClick={() => handleVerifyCertificate(documentId)}
-                    endIcon={<SearchIcon />}
-                    disabled={isSearching || documentId.length < 10}
-                    sx={{
-                        backgroundColor: config.primaryColor,
-                        color: 'white',
-                        fontWeight: 700,
-                        fontSize: { xs: '1rem', sm: '1.1rem' },
-                        py: { xs: 1.5, sm: 2 },
-                        px: { xs: 3, sm: 4 },
-                        borderRadius: '12px',
-                        boxShadow: `0 4px 16px #27348b 40`,
-                        '&:hover': {
-                            boxShadow: `0 6px 20px #27348b 50`,
-                            transform: 'translateY(-2px)'
-                        },
-                        transition: 'all 0.3s ease'
-                    }}
-                >
-                    {isSearching ? 'Buscando...' : 'Iniciar Búsqueda'}
-                </Button>
+                    >
+                        {isSearching ? 'Buscando...' : 'Iniciar Búsqueda'}
+                    </Button>
 
-                {renderContent()}
-            </Box>
-
-        </div >
+                    {renderContent()}
+                </Box>
+            </Container>
+        </Box>
     );
 };
 

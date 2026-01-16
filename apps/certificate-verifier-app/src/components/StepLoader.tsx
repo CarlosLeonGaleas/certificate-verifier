@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, CircularProgress, Fab, LinearProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Fab, LinearProgress, Typography, useTheme, useMediaQuery } from '@mui/material';
 import { green, red } from '@mui/material/colors';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -18,7 +18,7 @@ interface StepLoaderProps {
   onFinish: () => void;
 }
 
-const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed, onFinish}) => {
+const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed, onFinish }) => {
   const [statuses, setStatuses] = useState<StepStatus[]>(['idle', 'idle', 'idle']);
   const [progress1, setProgress1] = useState(0);
   const [buffer1, setBuffer1] = useState(10);
@@ -29,8 +29,10 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
   const isBuffering = useRef(false);
 
   const { config } = useInstitution();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Reset / start when active changes
   useEffect(() => {
     if (!active) {
       setStatuses(['idle', 'idle', 'idle']);
@@ -46,7 +48,6 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
     runStep(0);
   }, [active]);
 
-  // Si API terminó y estamos en step 2 → esperar unos segundos y luego marcar success/error
   useEffect(() => {
     if (completed && statuses[2] === 'loading') {
       const timer = setTimeout(() => {
@@ -56,9 +57,8 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
           return updated;
         });
 
-        // Avisar al padre que ya terminó toda la animación
-        setTimeout(onFinish, 800); // pequeño delay extra opcional
-      }, 2000); // ⏳ tiempo mínimo del step 2
+        setTimeout(onFinish, 800);
+      }, 2000);
 
       return () => clearTimeout(timer);
     }
@@ -75,7 +75,6 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
     });
 
     setTimeout(() => {
-      // 👉 Step 2 ya no se completa aquí
       if (stepIndex < 2) {
         setStatuses(prev => {
           const updated = [...prev];
@@ -113,7 +112,7 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
       if (progress >= 100) {
         clearInterval(interval);
         isBuffering.current = false;
-        runStep(which); // which=1 → step1, which=2 → step2
+        runStep(which);
       }
     }, 80);
   };
@@ -125,18 +124,38 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
     'Recuperando los datos...',
   ];
 
+  const labelsShort = [
+    'Conectando...',
+    'Buscando...',
+    'Recuperando...',
+  ];
+
   const renderStep = (index: number) => {
     const status = statuses[index];
     const isLoading = status === 'loading';
     const isSuccess = status === 'success';
     const isError = status === 'error';
 
+    const fabSize = isMobile ? 48 : 56;
+    const iconSize = isMobile ? 24 : 32;
+
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-        <Box sx={{ m: 1, position: 'relative' }}>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          mt: { xs: 0.5, sm: 1 },
+          minWidth: { xs: '80px', sm: '120px', md: '140px' }
+        }}
+      >
+        <Box sx={{ m: { xs: 0.5, sm: 1 }, position: 'relative' }}>
           <Fab
+            size={isMobile ? 'medium' : 'large'}
             sx={{
               color: 'white',
+              width: fabSize,
+              height: fabSize,
               bgcolor: isSuccess
                 ? green[500]
                 : isError
@@ -151,34 +170,62 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
               },
             }}
           >
-            {isSuccess ? <CheckIcon /> : isError ? <CloseIcon /> : icons[index]}
+            {isSuccess ? (
+              <CheckIcon sx={{ fontSize: iconSize }} />
+            ) : isError ? (
+              <CloseIcon sx={{ fontSize: iconSize }} />
+            ) : (
+              React.cloneElement(icons[index], { sx: { fontSize: iconSize } })
+            )}
           </Fab>
           {isLoading && (
             <CircularProgress
-              size={68}
+              size={fabSize + (isMobile ? 12 : 16)}
               sx={{
                 color: green[500],
                 position: 'absolute',
-                top: -6,
-                left: -6,
+                top: isMobile ? -6 : -8,
+                left: isMobile ? -6 : -8,
                 zIndex: 1,
               }}
             />
           )}
         </Box>
-        <Typography variant="body2"><strong>{labels[index]}</strong></Typography>
+        <Typography 
+          variant={isMobile ? 'caption' : 'body2'}
+          sx={{
+            textAlign: 'center',
+            fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' },
+            px: { xs: 0.5, sm: 1 },
+            lineHeight: 1.2
+          }}
+        >
+          <strong>{isMobile ? labelsShort[index] : labels[index]}</strong>
+        </Typography>
       </Box>
     );
   };
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: { xs: 0.5, sm: 1, md: 2 },
+        flexWrap: { xs: 'nowrap', sm: 'nowrap' },
+        justifyContent: 'center',
+        width: '100%',
+        maxWidth: '100%',
+        overflowX: 'auto',
+        py: { xs: 1, sm: 2 }
+      }}
+    >
       {renderStep(0)}
-      <Box sx={{ width: 80 }}>
+      <Box sx={{ width: { xs: 40, sm: 60, md: 80 }, minWidth: { xs: 40, sm: 60, md: 80 } }}>
         <LinearProgress variant="buffer" value={progress1} valueBuffer={buffer1} />
       </Box>
       {renderStep(1)}
-      <Box sx={{ width: 80 }}>
+      <Box sx={{ width: { xs: 40, sm: 60, md: 80 }, minWidth: { xs: 40, sm: 60, md: 80 } }}>
         <LinearProgress variant="buffer" value={progress2} valueBuffer={buffer2} />
       </Box>
       {renderStep(2)}
