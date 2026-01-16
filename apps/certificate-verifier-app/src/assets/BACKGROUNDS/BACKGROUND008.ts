@@ -456,42 +456,32 @@ const html_BACKGROUND008 = `
             const t = text.trim();
 
             const colonIndex = t.indexOf(':');
-            if (colonIndex === -1) return null; // no cumple formato básico
+            if (colonIndex === -1) return null;
 
-            // Buscar todos los puntos después del colonIndex
+            // Buscar el último punto ANTES de la palabra "Presentado"
+            const presentadoMatch = t.toLowerCase().indexOf('presentado', colonIndex + 1);
+            if (presentadoMatch === -1) return null;
+
+            // Buscar el último punto antes de "Presentado"
+            let finalDotIndex = -1;
             let searchFrom = colonIndex + 1;
             let dotIndex = t.indexOf('.', searchFrom);
-            if (dotIndex === -1) return null; // no hay punto tras los dos puntos: no dividimos
-
-            // Intentamos encontrar un punto tal que lo que viene inmediatamente después (trim)
-            // comience por la palabra "Presentado" (case-insensitive).
-            let candidateDot = -1;
-            while (dotIndex !== -1) {
-                const after = t.slice(dotIndex + 1).trimStart(); // texto después del punto (sin trim final aún)
-                if (after.length > 0) {
-                const firstWord = after.split(/\s+/)[0] || "";
-                if (firstWord.toLowerCase() === "presentado") {
-                    candidateDot = dotIndex;
-                    break;
-                }
-                }
-                // continuar buscando siguiente punto
+            
+            while (dotIndex !== -1 && dotIndex < presentadoMatch) {
+                finalDotIndex = dotIndex;
                 dotIndex = t.indexOf('.', dotIndex + 1);
             }
 
-            // Si no encontramos un punto seguido por "Presentado", tomar el primer punto posterior al colon
-            const finalDotIndex = (candidateDot !== -1) ? candidateDot : t.indexOf('.', searchFrom);
+            if (finalDotIndex === -1) return null;
 
-            if (finalDotIndex === -1) return null; // redundante, pero seguro
+            const part1 = t.slice(0, colonIndex + 1).trim();
+            const part2 = t.slice(colonIndex + 1, finalDotIndex).trim();
+            const part3 = t.slice(finalDotIndex + 1).trim();
 
-            const part1 = t.slice(0, colonIndex + 1).trim(); // incluye ':'
-            const part2 = t.slice(colonIndex + 1, finalDotIndex).trim(); // título (puede contener puntos)
-            const part3 = t.slice(finalDotIndex + 1).trim(); // resto después del punto
-
-            if (!part1 || !part2 || !part3) return null; // si algo queda vacío, no tocar
+            if (!part1 || !part2 || !part3) return null;
 
             return [part1, part2, part3];
-            }
+        }
 
     // Reemplazo y lógica de impresión
     window.addEventListener('load', function () {
