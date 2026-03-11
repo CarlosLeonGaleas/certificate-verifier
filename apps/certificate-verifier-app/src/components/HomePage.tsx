@@ -78,7 +78,7 @@ const HomePage: React.FC = () => {
                         fontSize: { xs: '1.1rem', sm: '1.5rem', md: '2rem' }
                     }}
                 >
-                    INSTITUTO TECNOLÓGICO SUPERIOR UNIVERSITARIO RUMIÑAHUI
+                    INSTITUTO SUPERIOR TECNOLÓGICO RUMIÑAHUI
                 </Typography>
             </Container>
 
@@ -113,8 +113,19 @@ const HomePage: React.FC = () => {
                             }}
                         >
                             <CopyrightIcon fontSize="small" />
+
                             <Typography variant="body2">
-                                {new Date().getFullYear()} Departamento de Investigación
+                                {new Date().getFullYear()} <Link
+                                    href="mailto:investigacion@ister.edu.ec"
+                                    color="inherit"
+                                    underline="hover"
+                                    sx={{
+                                        fontSize: '0.875rem',
+                                        '&:hover': {
+                                            color: '#3b4fdb'
+                                        }
+                                    }}
+                                >Departamento de Investigación</Link>
                             </Typography>
                         </Box>
 
@@ -149,7 +160,7 @@ const HomePage: React.FC = () => {
                                     }
                                 }}
                             >
-                                Desarrollado por: Carlos León Galeas
+                                Aplicación web: Carlos León Galeas
                             </Link>
                         </Box>
 
@@ -169,9 +180,9 @@ const HomePage: React.FC = () => {
                                 gap: 1
                             }}
                         >
-                            <EmailIcon fontSize="small" />
+                            <CodeIcon fontSize="small" />
                             <Link
-                                href="mailto:investigacion@ister.edu.ec"
+                                href="https://www.linkedin.com/in/juan-minango-4b6106197/"
                                 color="inherit"
                                 underline="hover"
                                 sx={{
@@ -181,7 +192,7 @@ const HomePage: React.FC = () => {
                                     }
                                 }}
                             >
-                                investigacion@ister.edu.ec
+                                Lógica Blockchain: Juan Minango Negrete
                             </Link>
                         </Box>
                     </Box>
