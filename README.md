@@ -1,7 +1,9 @@
 # CERTIFICATE VERIFICATION PAGE
-### Developer: Carlos León Galeas
-### Departamento de Investigación - Instituto Tecnológico Superior Universitario Rumiñahui
-#### Resume
+### Departamento de Investigación - Instituto Superior Tecnológico Rumiñahui
+### Developers:
+#### Web Application: Carlos León Galeas
+#### Blockchain Logic: Juan Minango Negrete
+### Resume:
 A page to verify the information and/or existence of a certificate issued on the Blockchain by the Instituto Tecnológico Superior Rumiñahui.
 You can check certificates using the ID or the transaction hash on the blockchain.
 You can also enter your national ID to see all certificates issued to you.
@@ -10,7 +12,8 @@ You can also enter your national ID to see all certificates issued to you.
 
 ## App Screens
 ### Initial Screen
-<img width="1351" height="633" alt="Captura de pantalla 2025-10-06 110936" src="https://github.com/user-attachments/assets/e4a0e32d-1c0d-4c75-bd0c-0c9e0af9e341" />
+
+<img width="1351" height="633" alt="Captura de pantalla 2025-10-06 110936" src="https://github.com/user-attachments/assets/4fe7b489-4e5f-45e2-9119-71194ca34494" />
 
 ### Verifying a certificate
 <img width="1888" height="924" alt="Captura de pantalla 2025-10-06 113033" src="https://github.com/user-attachments/assets/90229f52-66a1-4d71-86ab-1b3552ab3db6" />
