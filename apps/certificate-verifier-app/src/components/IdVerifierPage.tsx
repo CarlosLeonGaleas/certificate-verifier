@@ -125,10 +125,12 @@ const IdVerifierPage: React.FC = () => {
                     disableEscapeKeyDown
                     fullWidth
                     maxWidth="sm"
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 3,
-                            mx: { xs: 2, sm: 'auto' },
+                    slotProps={{
+                        paper: {
+                            sx: {
+                                borderRadius: 3,
+                                mx: { xs: 2, sm: 'auto' },
+                            }
                         }
                     }}
                 >

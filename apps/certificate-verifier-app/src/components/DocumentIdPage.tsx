@@ -85,7 +85,6 @@ const DocumentIdPage: React.FC = () => {
     const { config } = useInstitution();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
     const fetchedOnce = useRef(false);
 
@@ -145,10 +144,12 @@ const DocumentIdPage: React.FC = () => {
                     disableEscapeKeyDown
                     fullWidth
                     maxWidth="sm"
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 3,
-                            mx: { xs: 2, sm: 'auto' },
+                    slotProps={{
+                        paper: {
+                            sx: {
+                                borderRadius: 3,
+                                mx: { xs: 2, sm: 'auto' },
+                            }
                         }
                     }}
                 >
@@ -168,9 +169,9 @@ const DocumentIdPage: React.FC = () => {
                     </DialogContent>
                 </Dialog>
                 {showResults && (
-                    <Box sx={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
                         width: '100%'
                     }}>
@@ -202,13 +203,13 @@ const DocumentIdPage: React.FC = () => {
     };
 
     return (
-        <Box 
-            sx={{ 
-                backgroundColor: 'rgb(248, 250, 252)', 
-                minHeight: '100%', 
-                width: '100%', 
-                display: 'flex', 
-                flexDirection: 'column', 
+        <Box
+            sx={{
+                backgroundColor: 'rgb(248, 250, 252)',
+                minHeight: '100%',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center'
             }}
         >
@@ -251,11 +252,11 @@ const DocumentIdPage: React.FC = () => {
                     >
                         Ingrese su número de cédula
                     </Typography>
-                    <Box 
+                    <Box
                         sx={{
-                            width: '100%', 
-                            mb: { xs: 2, sm: 3 }, 
-                            display: 'flex', 
+                            width: '100%',
+                            mb: { xs: 2, sm: 3 },
+                            display: 'flex',
                             justifyContent: 'center'
                         }}
                     >

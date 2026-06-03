@@ -61,7 +61,6 @@ const HashVerifierPage: React.FC = () => {
     const { config } = useInstitution();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
     const fetchedOnce = useRef(false);
 
@@ -123,10 +122,12 @@ const HashVerifierPage: React.FC = () => {
                     disableEscapeKeyDown
                     fullWidth
                     maxWidth="sm"
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 3,
-                            mx: { xs: 2, sm: 'auto' },
+                    slotProps={{
+                        paper: {
+                            sx: {
+                                borderRadius: 3,
+                                mx: { xs: 2, sm: 'auto' },
+                            }
                         }
                     }}
                 >

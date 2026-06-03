@@ -12,6 +12,7 @@ import { drawerItemsVerifier, drawerItemsSearch } from '../icons/index'
 import { useInstitution } from '../contexts/InstitutionContext'
 
 const InvestigacionLogoVerticalBlanco = '/Investigacion_LogoVerticalBlanco.svg'
+const InvestigacionLupaBlanca = '/Investigacion_LupaBlanca.svg'
 
 const openedMixin = (theme: Theme): CSSObject => ({
   transition: theme.transitions.create('width', {
@@ -78,7 +79,7 @@ const DrawerMenu = ({ open, handleClose, isMobile, drawerWidth }: DrawerMenuProp
   const { config, isITCA } = useInstitution()
 
   const drawerContent = (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100dvh' }}>
       <Box>
         <DrawerHeader
           sx={{
@@ -151,11 +152,19 @@ const DrawerMenu = ({ open, handleClose, isMobile, drawerWidth }: DrawerMenuProp
             src={InvestigacionLogoVerticalBlanco}
             alt="Departamento de Investigación"
             className="investigacion-logo"
-            style={{ width: 220, height: 150 }}
+            style={{ width: 220 }}
+          />
+        )}
+        {!open && !isITCA && (
+          <img
+            src={InvestigacionLupaBlanca}
+            alt="Departamento de Investigación"
+            className="investigacion-logo"
+            style={{ width: 40 }}
           />
         )}
       </Box>
-    </>
+    </Box>
   )
 
   const drawerStyles = {
