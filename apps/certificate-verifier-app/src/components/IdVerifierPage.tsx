@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom';
-import { TextField, Button, Box, Typography, Container, useTheme, useMediaQuery } from '@mui/material';
+import { TextField, Button, Box, Typography, Container, useTheme, useMediaQuery, Dialog, DialogContent } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CertificateFound from './CertificateFound';
 import CertificateNotFound from './CertificateNotFound';
@@ -63,7 +63,6 @@ const IdVerifierPage: React.FC = () => {
     const { config } = useInstitution();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
     const fetchedOnce = useRef(false);
 
@@ -80,6 +79,7 @@ const IdVerifierPage: React.FC = () => {
         console.log('Animation finished');
         setShowResults(true);
         setIsSearching(false);
+        setLoaderActive(false);
     };
 
     const handleVerifyCertificate = async (idToVerify: number) => {
@@ -120,22 +120,33 @@ const IdVerifierPage: React.FC = () => {
                     mt: { xs: 2, sm: 3, md: 4 }
                 }}
             >
-                {loaderActive && (
-                    <Box sx={{
-                        width: '100%',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        px: { xs: 1, sm: 2 }
-                    }}>
-                        <StepLoader
-                            finalSuccess={certificateFound}
-                            active={loaderActive}
-                            completed={loaderCompleted}
-                            onFinish={() => handleAnimationFinished()}
-                        />
-                    </Box>
-
-                )}
+                <Dialog
+                    open={loaderActive}
+                    disableEscapeKeyDown
+                    fullWidth
+                    maxWidth="sm"
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 3,
+                            mx: { xs: 2, sm: 'auto' },
+                        }
+                    }}
+                >
+                    <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+                        <Box sx={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'center',
+                        }}>
+                            <StepLoader
+                                finalSuccess={certificateFound}
+                                active={loaderActive}
+                                completed={loaderCompleted}
+                                onFinish={() => handleAnimationFinished()}
+                            />
+                        </Box>
+                    </DialogContent>
+                </Dialog>
                 {showResults && (
                     <Box sx={{
                         display: 'flex',

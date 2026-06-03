@@ -31,7 +31,6 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
   const { config } = useInstitution();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     if (!active) {
@@ -140,11 +139,11 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
     const iconSize = isMobile ? 24 : 32;
 
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           mt: { xs: 0.5, sm: 1 },
           minWidth: { xs: '80px', sm: '120px', md: '140px' }
         }}
@@ -159,14 +158,14 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
               bgcolor: isSuccess
                 ? green[500]
                 : isError
-                ? red[500]
-                : config.primaryColor,
+                  ? red[500]
+                  : config.primaryColor,
               '&:hover': {
                 bgcolor: isSuccess
                   ? green[700]
                   : isError
-                  ? red[700]
-                  : 'primary.dark',
+                    ? red[700]
+                    : 'primary.dark',
               },
             }}
           >
@@ -191,7 +190,7 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
             />
           )}
         </Box>
-        <Typography 
+        <Typography
           variant={isMobile ? 'caption' : 'body2'}
           sx={{
             textAlign: 'center',
@@ -207,10 +206,10 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
   };
 
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
         gap: { xs: 0.5, sm: 1, md: 2 },
         flexWrap: { xs: 'nowrap', sm: 'nowrap' },
         justifyContent: 'center',
@@ -221,11 +220,11 @@ const StepLoader: React.FC<StepLoaderProps> = ({ finalSuccess, active, completed
       }}
     >
       {renderStep(0)}
-      <Box sx={{ width: { xs: 40, sm: 60, md: 80 }, minWidth: { xs: 40, sm: 60, md: 80 } }}>
+      <Box sx={{ flexGrow: 1, flexShrink: 1, minWidth: { xs: 10, sm: 20, md: 30 }, maxWidth: { xs: 40, sm: 60, md: 80 } }}>
         <LinearProgress variant="buffer" value={progress1} valueBuffer={buffer1} />
       </Box>
       {renderStep(1)}
-      <Box sx={{ width: { xs: 40, sm: 60, md: 80 }, minWidth: { xs: 40, sm: 60, md: 80 } }}>
+      <Box sx={{ flexGrow: 1, flexShrink: 1, minWidth: { xs: 10, sm: 20, md: 30 }, maxWidth: { xs: 40, sm: 60, md: 80 } }}>
         <LinearProgress variant="buffer" value={progress2} valueBuffer={buffer2} />
       </Box>
       {renderStep(2)}
