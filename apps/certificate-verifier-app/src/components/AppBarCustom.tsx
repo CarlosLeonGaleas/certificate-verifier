@@ -46,9 +46,9 @@ const AppBarCustom: React.FC<AppBarCustomProps> = ({ openOptions, handleDrawerTo
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
 
   return (
-    <AppBar 
-      position="fixed" 
-      openOptions={openOptions} 
+    <AppBar
+      position="fixed"
+      openOptions={openOptions}
       ismobile={isMobile.toString()}
       sx={{ backgroundColor: config.appBarBgColor, color: config.primaryColor }}
     >
@@ -66,19 +66,19 @@ const AppBarCustom: React.FC<AppBarCustomProps> = ({ openOptions, handleDrawerTo
         >
           <MenuIcon />
         </IconButton>
-        
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            width: '100%', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
+
+        <Box
+          sx={{
+            display: 'flex',
+            width: '100%',
+            alignItems: 'center',
+            justifyContent: 'space-between',
             gap: { xs: 1, sm: 2 }
           }}
         >
-          <Typography 
-            variant={isSmallScreen ? 'body1' : 'h6'} 
-            noWrap 
+          <Typography
+            variant={isSmallScreen ? 'body1' : 'h6'}
+            noWrap
             component="div"
             sx={{
               fontSize: { xs: '0.875rem', sm: '1rem', md: '1.25rem' },
@@ -89,34 +89,36 @@ const AppBarCustom: React.FC<AppBarCustomProps> = ({ openOptions, handleDrawerTo
           >
             <strong>{isSmallScreen ? 'VALIDAR CERTIFICADOS' : 'VALIDAR CERTIFICADOS BLOCKCHAIN'}</strong>
           </Typography>
-          
+
           {/* Logo solo visible en desktop cuando el drawer está cerrado */}
-          {!isMobile && !openOptions && (
-            <Box
-              component="img"
-              src={config.logo}
-              alt="Logo"
-              sx={{
+          <Box
+            component="img"
+            src={config.logo}
+            alt="Logo"
+            sx={{
+              objectFit: 'contain',
+              transition: (theme) => theme.transitions.create(['opacity', 'transform', 'width'], {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.standard
+              }),
+              display: isSmallScreen ? 'none' : 'block',
+              ...(!isMobile ? {
+                // Desktop settings: animate opacity and translation based on drawer openOptions state
                 width: { sm: 150, md: 200 },
                 height: { sm: 30, md: 40 },
-                objectFit: 'contain'
-              }}
-            />
-          )}
-          
-          {/* Logo en móvil - más pequeño */}
-          {isMobile && !isSmallScreen && (
-            <Box
-              component="img"
-              src={config.logo}
-              alt="Logo"
-              sx={{
+                opacity: openOptions ? 0 : 1,
+                transform: openOptions ? 'translateX(20px)' : 'translateX(0)',
+                pointerEvents: openOptions ? 'none' : 'auto',
+              } : {
+                // Mobile settings: always visible (if not small screen)
                 width: 120,
                 height: 30,
-                objectFit: 'contain'
-              }}
-            />
-          )}
+                opacity: 1,
+                transform: 'none',
+                pointerEvents: 'auto',
+              })
+            }}
+          />
         </Box>
       </Toolbar>
     </AppBar>

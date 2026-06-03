@@ -93,7 +93,7 @@ const DrawerMenu = ({ open, handleClose, isMobile, drawerWidth }: DrawerMenuProp
             src={config.logo}
             alt="Universitario"
             className="universitario-logo"
-            style={{ width: 200, height: 40 }}
+            style={{ width: 195, height: 40, marginLeft: '5px' }}
           />
           <IconButton onClick={handleClose} sx={{ color: config.primaryColor }} size="medium">
             <ChevronLeftIcon />
@@ -146,22 +146,55 @@ const DrawerMenu = ({ open, handleClose, isMobile, drawerWidth }: DrawerMenuProp
           ))}
         </List>
       </Box>
-      <Box sx={{ textAlign: 'center', mb: 2 }}>
-        {open && !isITCA && (
-          <img
-            src={InvestigacionLogoVerticalBlanco}
-            alt="Departamento de Investigación"
-            className="investigacion-logo"
-            style={{ width: 220 }}
-          />
-        )}
-        {!open && !isITCA && (
-          <img
-            src={InvestigacionLupaBlanca}
-            alt="Departamento de Investigación"
-            className="investigacion-logo"
-            style={{ width: 40 }}
-          />
+      <Box
+        sx={{
+          textAlign: 'center',
+          mb: 2,
+          position: 'relative',
+          height: 125, // Fixed height to prevent layout shifts
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden'
+        }}
+      >
+        {!isITCA && (
+          <>
+            {/* Full logo shown when drawer is open */}
+            <Box
+              component="img"
+              src={InvestigacionLogoVerticalBlanco}
+              alt="Departamento de Investigación"
+              sx={{
+                width: 220,
+                position: 'absolute',
+                opacity: open ? 1 : 0,
+                transform: open ? 'translateY(0)' : 'translateY(20px)',
+                transition: (theme) => theme.transitions.create(['opacity', 'transform'], {
+                  easing: theme.transitions.easing.sharp,
+                  duration: theme.transitions.duration.standard,
+                }),
+                pointerEvents: open ? 'auto' : 'none',
+              }}
+            />
+            {/* Small magnifying glass logo shown when drawer is closed */}
+            <Box
+              component="img"
+              src={InvestigacionLupaBlanca}
+              alt="Departamento de Investigación"
+              sx={{
+                width: 40,
+                position: 'absolute',
+                opacity: open ? 0 : 1,
+                transform: open ? 'translateY(-20px)' : 'translateY(0)',
+                transition: (theme) => theme.transitions.create(['opacity', 'transform'], {
+                  easing: theme.transitions.easing.sharp,
+                  duration: theme.transitions.duration.standard,
+                }),
+                pointerEvents: open ? 'none' : 'auto',
+              }}
+            />
+          </>
         )}
       </Box>
     </Box>
