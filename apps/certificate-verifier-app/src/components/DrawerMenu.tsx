@@ -113,7 +113,7 @@ const DrawerMenu = ({ open, handleClose, isMobile, drawerWidth }: DrawerMenuProp
             }}
           >
             <p>
-              <strong>VERIFICAR CERTIFICADO</strong>
+              <strong>VALIDAR CERTIFICADO</strong>
             </p>
           </Box>
         )}

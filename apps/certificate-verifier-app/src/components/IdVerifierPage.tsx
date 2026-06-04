@@ -204,7 +204,7 @@ const IdVerifierPage: React.FC = () => {
                             mb: { xs: 1, sm: 1 }
                         }}
                     >
-                        Verificar Certificado
+                        Token ID del Certificado
                     </Typography>
                     <Typography
                         variant="body2"
@@ -215,7 +215,7 @@ const IdVerifierPage: React.FC = () => {
                             px: { xs: 1, sm: 0 }
                         }}
                     >
-                        Ingrese el Token ID (N°)
+                        Ingrese el Token ID (N°) del certificado
                     </Typography>
                     <Box
                         sx={{
@@ -227,7 +227,7 @@ const IdVerifierPage: React.FC = () => {
                     >
                         <TextField
                             id="outlined-textarea"
-                            label="Token ID:"
+                            placeholder='0'
                             type="number"
                             value={id ?? ''}
                             onChange={(e) => {
@@ -327,7 +327,7 @@ const IdVerifierPage: React.FC = () => {
                             transition: 'all 0.3s ease'
                         }}
                     >
-                        {(isSearching) ? 'Verificando...' : 'Iniciar Verificación'}
+                        {(isSearching) ? 'Buscando...' : 'Iniciar Búsqueda'}
                     </Button>
 
                     {renderContent()}

@@ -239,7 +239,7 @@ const DocumentIdPage: React.FC = () => {
                             mb: { xs: 1, sm: 1 }
                         }}
                     >
-                        Buscar Certificados
+                        Número de Cédula del Beneficiario
                     </Typography>
                     <Typography
                         variant="body2"
@@ -250,7 +250,7 @@ const DocumentIdPage: React.FC = () => {
                             px: { xs: 1, sm: 0 }
                         }}
                     >
-                        Ingrese su número de cédula
+                        Ingrese el número de cédula del beneficiario
                     </Typography>
                     <Box
                         sx={{
@@ -262,7 +262,7 @@ const DocumentIdPage: React.FC = () => {
                     >
                         <TextField
                             id="outlined-textarea"
-                            label="Número de cédula:"
+                            placeholder='0123456789'
                             type="number"
                             value={documentId ?? ''}
                             onChange={(e) => {

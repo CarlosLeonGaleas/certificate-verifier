@@ -201,7 +201,7 @@ const HashVerifierPage: React.FC = () => {
                             mb: { xs: 1, sm: 1 }
                         }}
                     >
-                        Verificar Certificado
+                        Hash de la Transacción
                     </Typography>
                     <Typography
                         variant="body2"
@@ -212,7 +212,7 @@ const HashVerifierPage: React.FC = () => {
                             px: { xs: 1, sm: 0 }
                         }}
                     >
-                        Ingrese el Hash de la transacción
+                        Ingrese el hash de la transacción Blockchain
                     </Typography>
                     <Box
                         sx={{
@@ -224,7 +224,7 @@ const HashVerifierPage: React.FC = () => {
                     >
                         <TextField
                             id="outlined-textarea"
-                            label="Hash de la transacción:"
+                            placeholder='0x8b607a78e6d...'
                             value={hash ?? ''}
                             onChange={(e) => {
                                 const value = e.target.value;
@@ -320,7 +320,7 @@ const HashVerifierPage: React.FC = () => {
                             transition: 'all 0.3s ease'
                         }}
                     >
-                        {(isSearching) ? 'Verificando...' : 'Iniciar Verificación'}
+                        {(isSearching) ? 'Validando...' : 'Iniciar Validación'}
                     </Button>
 
                     {renderContent()}

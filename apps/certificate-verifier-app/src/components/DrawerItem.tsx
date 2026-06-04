@@ -16,7 +16,7 @@ function handleRoute(option: string, isITCA: boolean): string {
   switch (option) {
     case 'Hash':
       return `${prefix}/hash`;
-    case 'Id':
+    case 'Token ID':
       return `${prefix}/id`;
     case 'Cédula de Identidad':
       return `${prefix}/documentId`;

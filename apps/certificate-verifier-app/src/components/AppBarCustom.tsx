@@ -87,7 +87,7 @@ const AppBarCustom: React.FC<AppBarCustomProps> = ({ openOptions, handleDrawerTo
               textOverflow: 'ellipsis'
             }}
           >
-            <strong>{isSmallScreen ? 'VALIDAR CERTIFICADOS' : 'VALIDAR CERTIFICADOS BLOCKCHAIN'}</strong>
+            <strong>{isSmallScreen ? 'VALIDACIÓN DE CERTIFICADOS' : 'VALIDACIÓN DE CERTIFICADOS BLOCKCHAIN'}</strong>
           </Typography>
 
           {/* Logo solo visible en desktop cuando el drawer está cerrado */}
