@@ -20,7 +20,6 @@ import {
   Person,
   Apartment,
   Description,
-  Verified,
   Groups,
   Download,
   Tag as Hash,
@@ -73,10 +72,9 @@ const getTransactionHashQRCode = async (url: string) => {
 const generateCertificateHTML = (certificateData: Certificate.InfoType, transactionHashQRBase64: string) => {
   try {
     let html_template_BACKGROUND;
-    let typeCertificate = getTypeValue(certificateData.course);
-    let nameCourse = getTitleValue(certificateData.course);
-    let backgroundCode = getBackgroundCode(certificateData.course);
-    let doc_id;
+    const typeCertificate = getTypeValue(certificateData.course);
+    const nameCourse = getTitleValue(certificateData.course);
+    const backgroundCode = getBackgroundCode(certificateData.course);
 
     const urlTokenId = `https://d1uys4mzmfaahs.cloudfront.net/id/${certificateData.tokenId}`;
     let urlHash = `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
@@ -109,7 +107,7 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
         html_template_BACKGROUND = html_BACKGROUND005;
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND007');
         break;
-      case 'BACKGROUND008':
+      case 'BACKGROUND008': {
         html_template_BACKGROUND = html_BACKGROUND008;
         urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
         let variant8;
@@ -121,7 +119,8 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant8.toUpperCase());
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
         break;
-      case 'BACKGROUND009':
+      }
+      case 'BACKGROUND009': {
         html_template_BACKGROUND = html_BACKGROUND009;
         urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
         let variant9;
@@ -133,6 +132,7 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant9.toUpperCase());
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
         break;
+      }
       case 'BACKGROUND010':
         html_template_BACKGROUND = html_BACKGROUND010;
         break;
@@ -165,9 +165,9 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
     html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-tokenid}}', urlTokenId);
 
     const newWindow = window.open();
-    newWindow.document.open();
-    newWindow.document.write(html_template_BACKGROUND);
-    newWindow.document.close();
+    newWindow?.document.open();
+    newWindow?.document.write(html_template_BACKGROUND);
+    newWindow?.document.close();
   } catch (error) {
     console.error('Error al generar el certificado HTML:', error);
   }
@@ -217,7 +217,6 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   const { config } = useInstitution();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   const InfoItem = ({ icon: Icon, label, value }) => {
     if (!value && value !== 0) return null;
@@ -345,10 +344,10 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
               Información del Certificado
             </Typography>
             <Grid container spacing={{ xs: 2, sm: 3 }}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <InfoItem icon={Person} label="Beneficiario" value={name} />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <InfoItem icon={Cedula} label="Cédula del Beneficiario" value={documentId} />
               </Grid>
             </Grid>
@@ -379,13 +378,13 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
               Información Institucional
             </Typography>
             <Grid container spacing={{ xs: 2, sm: 3 }}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <InfoItem icon={Apartment} label="Institución Emisora" value={institution} />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <InfoItem icon={Apartment} label="Área Emisora" value={area} />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <InfoItem icon={Groups} label="Firmantes" value={replacePipeWithComma(signatoryName)} />
               </Grid>
             </Grid>
@@ -407,17 +406,17 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
               <CalendarToday sx={{ fontSize: { xs: 20, sm: 24 } }} />
               Fechas y Duración
             </Typography>
+            <Box mb={{ xs: 2, sm: 3 }}>
+              <InfoItem icon={CalendarToday} label="Lugar y Fecha de Emisión" value={issuedDate} />
+            </Box>
             <Grid container spacing={{ xs: 2, sm: 3 }}>
-              <Grid item xs={12} sm={6} md={4}>
-                <InfoItem icon={CalendarToday} label="Fecha de Emisión" value={issuedDate} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <InfoItem icon={CalendarToday} label="Fecha de Inicio" value={startDate} />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <InfoItem icon={CalendarToday} label="Fecha de Fin" value={endDate} />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <InfoItem icon={AccessTime} label="Duración" value={hoursWorked} />
               </Grid>
             </Grid>
