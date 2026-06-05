@@ -387,12 +387,6 @@ const html_BACKGROUND005 = `
                     description.classList.add("montserrat-text-center");
                 }
             }
-            setTimeout(function() {
-                var userResponse = confirm("¿Desea imprimir el certificado?");
-                if (userResponse) {
-                    window.print();
-                }
-            }, 3000); // 3 segundos
         };
     </script>
 </body>

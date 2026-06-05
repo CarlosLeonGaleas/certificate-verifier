@@ -12,6 +12,7 @@ import {
   useTheme,
   useMediaQuery,
   Container,
+  CircularProgress,
 } from '@mui/material';
 import {
   CalendarToday,
@@ -69,113 +70,114 @@ const getTransactionHashQRCode = async (url: string) => {
   }
 };
 
-const generateCertificateHTML = (certificateData: Certificate.InfoType, transactionHashQRBase64: string) => {
-  try {
-    let html_template_BACKGROUND;
-    const typeCertificate = getTypeValue(certificateData.course);
-    const nameCourse = getTitleValue(certificateData.course);
-    const backgroundCode = getBackgroundCode(certificateData.course);
+const buildCertificateHTMLContent = (certificateData: Certificate.InfoType, transactionHashQRBase64: string): string => {
+  let html_template_BACKGROUND = '';
+  const typeCertificate = getTypeValue(certificateData.course);
+  const nameCourse = getTitleValue(certificateData.course);
+  const backgroundCode = getBackgroundCode(certificateData.course);
 
-    const urlTokenId = `https://d1uys4mzmfaahs.cloudfront.net/id/${certificateData.tokenId}`;
-    let urlHash = `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
+  const urlTokenId = `https://d1uys4mzmfaahs.cloudfront.net/id/${certificateData.tokenId}`;
+  let urlHash = `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
 
-    switch (backgroundCode) {
-      case 'BACKGROUND001':
-        html_template_BACKGROUND = html_BACKGROUND001;
-        break;
-      case 'BACKGROUND002':
-        html_template_BACKGROUND = html_BACKGROUND001;
-        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND002');
-        break;
-      case 'BACKGROUND003':
-        html_template_BACKGROUND = html_BACKGROUND003;
-        break;
-      case 'BACKGROUND004':
-        html_template_BACKGROUND = html_BACKGROUND003;
-        break;
-      case 'BACKGROUND005':
+  switch (backgroundCode) {
+    case 'BACKGROUND001':
+      html_template_BACKGROUND = html_BACKGROUND001;
+      break;
+    case 'BACKGROUND002':
+      html_template_BACKGROUND = html_BACKGROUND001;
+      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND002');
+      break;
+    case 'BACKGROUND003':
+      html_template_BACKGROUND = html_BACKGROUND003;
+      break;
+    case 'BACKGROUND004':
+      html_template_BACKGROUND = html_BACKGROUND003;
+      break;
+    case 'BACKGROUND005':
+      html_template_BACKGROUND = html_BACKGROUND005;
+      break;
+    case 'BACKGROUND006':
+      if (typeCertificate === "PROYECTO") {
         html_template_BACKGROUND = html_BACKGROUND005;
-        break;
-      case 'BACKGROUND006':
-        if (typeCertificate === "PROYECTO") {
-          html_template_BACKGROUND = html_BACKGROUND005;
-        } else {
-          html_template_BACKGROUND = html_BACKGROUND006;
-        }
-        break;
-      case 'BACKGROUND007':
-        html_template_BACKGROUND = html_BACKGROUND005;
-        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND007');
-        break;
-      case 'BACKGROUND008': {
-        html_template_BACKGROUND = html_BACKGROUND008;
-        urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
-        let variant8;
-        if (nameCourse.includes(':')) {
-          [variant8] = nameCourse.split(':').map(s => s.trim());
-        } else {
-          variant8 = 'PONENTE';
-        }
-        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant8.toUpperCase());
-        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
-        break;
+      } else {
+        html_template_BACKGROUND = html_BACKGROUND006;
       }
-      case 'BACKGROUND009': {
-        html_template_BACKGROUND = html_BACKGROUND009;
-        urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
-        let variant9;
-        if (nameCourse.includes(':')) {
-          [variant9] = nameCourse.split(':').map(s => s.trim());
-        } else {
-          variant9 = 'ASISTENTE';
-        }
-        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant9.toUpperCase());
-        html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
-        break;
+      break;
+    case 'BACKGROUND007':
+      html_template_BACKGROUND = html_BACKGROUND005;
+      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND007');
+      break;
+    case 'BACKGROUND008': {
+      html_template_BACKGROUND = html_BACKGROUND008;
+      urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
+      let variant8;
+      if (nameCourse.includes(':')) {
+        [variant8] = nameCourse.split(':').map(s => s.trim());
+      } else {
+        variant8 = 'PONENTE';
       }
-      case 'BACKGROUND010':
-        html_template_BACKGROUND = html_BACKGROUND010;
-        break;
-      default:
-        html_template_BACKGROUND = html_BACKGROUND005;
-        break;
+      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant8.toUpperCase());
+      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
+      break;
     }
-
-    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{web-title}}', `${certificateData.tokenId}-${typeCertificate}-${certificateData.name}-${(function (text, maxLength) {
-      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-    })(nameCourse, 25)}`);
-    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHashQRBase64}}', transactionHashQRBase64);
-    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{name}}', certificateData.name);
-    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{cedula}}', certificateData.documentId);
-    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{description}}', certificateData.description);
-    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{issuedAt}}', certificateData.issuedDate);
-    const paddedTokenID = String(certificateData.tokenId).padStart(4, '0');
-    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{tokenID}}', paddedTokenID);
-    let url_blockchain;
-    if (certificateData.hash) {
-      url_blockchain = `https://polygonscan.com/tx/${certificateData.hash}#eventlog`;
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHash}}', certificateData.hash);
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-hash}}', urlHash);
-    } else {
-      url_blockchain = `https://polygonscan.com/nft/0xa447784327062ffaa976142b7636b4346e81965b/${certificateData.tokenId}`;
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHash}}', '');
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-hash}}', '');
+    case 'BACKGROUND009': {
+      html_template_BACKGROUND = html_BACKGROUND009;
+      urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
+      let variant9;
+      if (nameCourse.includes(':')) {
+        [variant9] = nameCourse.split(':').map(s => s.trim());
+      } else {
+        variant9 = 'ASISTENTE';
+      }
+      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant9.toUpperCase());
+      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
+      break;
     }
-    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-blockchain}}', url_blockchain);
-    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-tokenid}}', urlTokenId);
-
-    const newWindow = window.open();
-    newWindow?.document.open();
-    newWindow?.document.write(html_template_BACKGROUND);
-    newWindow?.document.close();
-  } catch (error) {
-    console.error('Error al generar el certificado HTML:', error);
+    case 'BACKGROUND010':
+      html_template_BACKGROUND = html_BACKGROUND010;
+      break;
+    default:
+      html_template_BACKGROUND = html_BACKGROUND005;
+      break;
   }
+
+  html_template_BACKGROUND = html_template_BACKGROUND.replace('{{web-title}}', `${certificateData.tokenId}-${typeCertificate}-${certificateData.name}-${(function (text, maxLength) {
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  })(nameCourse, 25)}`);
+  html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHashQRBase64}}', transactionHashQRBase64);
+  html_template_BACKGROUND = html_template_BACKGROUND.replace('{{name}}', certificateData.name);
+  html_template_BACKGROUND = html_template_BACKGROUND.replace('{{cedula}}', certificateData.documentId);
+  html_template_BACKGROUND = html_template_BACKGROUND.replace('{{description}}', certificateData.description);
+  html_template_BACKGROUND = html_template_BACKGROUND.replace('{{issuedAt}}', certificateData.issuedDate);
+  const paddedTokenID = String(certificateData.tokenId).padStart(4, '0');
+  html_template_BACKGROUND = html_template_BACKGROUND.replace('{{tokenID}}', paddedTokenID);
+  let url_blockchain;
+  if (certificateData.hash) {
+    url_blockchain = `https://polygonscan.com/tx/${certificateData.hash}#eventlog`;
+    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHash}}', certificateData.hash);
+    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-hash}}', urlHash);
+  } else {
+    url_blockchain = `https://polygonscan.com/nft/0xa447784327062ffaa976142b7636b4346e81965b/${certificateData.tokenId}`;
+    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{transactionHash}}', '');
+    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-hash}}', '');
+  }
+  html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-blockchain}}', url_blockchain);
+  html_template_BACKGROUND = html_template_BACKGROUND.replace('{{url-tokenid}}', urlTokenId);
+
+  return html_template_BACKGROUND;
 };
 
-const openCertificateHTML = async (certificateData: Certificate.InfoType) => {
+const getOrientation = (html: string): 'l' | 'p' => {
+  // 'l' = landscape, 'p' = portrait
+  const isLandscape = html.includes('landscape') ||
+    (html.includes('29.7cm') && html.includes('21cm'));
+  return isLandscape ? 'l' : 'p';
+};
+
+const downloadCertificatePDF = async (certificateData: Certificate.InfoType, setLoading?: (loading: boolean) => void) => {
   try {
-    console.log("Certificate Data:", certificateData);
+    setLoading?.(true);
+    console.log("Preparing Certificate Print...", certificateData);
     let url;
     if (certificateData.institution.includes('ITCA')) {
       if (certificateData.hash) {
@@ -192,9 +194,69 @@ const openCertificateHTML = async (certificateData: Certificate.InfoType) => {
     }
 
     const transactionHashQRBase64 = await getTransactionHashQRCode(url);
-    generateCertificateHTML(certificateData, transactionHashQRBase64);
+    const htmlRaw = buildCertificateHTMLContent(certificateData, transactionHashQRBase64);
+
+    // Detect layout orientation
+    const orientation = getOrientation(htmlRaw);
+
+    // Render in an off-screen iframe that remains visible to the layout engine so fonts and layouts render properly
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.top = '0';
+    iframe.style.left = '200vw'; // Render off-screen
+    iframe.style.opacity = '1';  // Keep opacity active so browser renders fonts
+    iframe.style.zIndex = '-9999';
+    iframe.style.pointerEvents = 'none';
+    iframe.style.border = 'none';
+
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) {
+      throw new Error('Failed to access iframe document.');
+    }
+
+    iframeDoc.open();
+    iframeDoc.write(htmlRaw);
+    iframeDoc.close();
+
+    // Wait for all assets (images, fonts) to load completely in the iframe
+    await new Promise<void>((resolve) => {
+      iframe.onload = async () => {
+        try {
+          // Wait for fonts inside the iframe to be ready
+          if (iframeDoc.fonts && iframeDoc.fonts.ready) {
+            await iframeDoc.fonts.ready;
+          }
+        } catch (e) {
+          console.warn('Fonts ready check failed:', e);
+        }
+        // Buffer timeout to ensure Cloudinary images are rendered
+        setTimeout(resolve, 1000);
+      };
+      if (iframeDoc.readyState === 'complete') {
+        setTimeout(resolve, 1000);
+      }
+    });
+
+    // Focus and trigger native print on the iframe window
+    if (iframe.contentWindow) {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } else {
+      throw new Error('Failed to access iframe window.');
+    }
+
+    // Clean up temporary iframe after a brief delay to avoid aborting print spooling
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
   } catch (error) {
-    console.error('Error al abrir el certificado HTML:', error);
+    console.error('Error preparing PDF print:', error);
+  } finally {
+    setLoading?.(false);
   }
 };
 
@@ -217,6 +279,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   const { config } = useInstitution();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [isDownloading, setIsDownloading] = React.useState(false);
 
   const InfoItem = ({ icon: Icon, label, value }) => {
     if (!value && value !== 0) return null;
@@ -457,10 +520,11 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
                 <Button
                   variant="contained"
                   color="primary"
-                  startIcon={!isMobile && <Download />}
+                  disabled={isDownloading}
+                  startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : (!isMobile && <Download />)}
                   fullWidth={isMobile}
                   onClick={() =>
-                    openCertificateHTML({
+                    downloadCertificatePDF({
                       tokenId,
                       documentId,
                       name,
@@ -475,18 +539,18 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
                       hoursWorked,
                       signatoryName,
                       hash,
-                    })
+                    }, setIsDownloading)
                   }
                   sx={{
                     maxWidth: { xs: '100%', sm: 'auto' },
-                    backgroundColor: '#27348b',
+                    backgroundColor: isDownloading ? 'grey.400' : '#27348b',
                     color: 'white',
                     fontWeight: 700,
                     fontSize: { xs: '0.875rem', sm: '1rem', md: '1.1rem' },
                     py: { xs: 1.25, sm: 1.5, md: 2 },
                     px: { xs: 3, sm: 3, md: 4 },
                     borderRadius: '12px',
-                    boxShadow: `0 4px 16px #27348b40`,
+                    boxShadow: isDownloading ? 'none' : `0 4px 16px #27348b40`,
                     '&:hover': {
                       backgroundColor: 'rgb(63, 81, 181)',
                       boxShadow: `0 6px 20px #27348b50`,
@@ -495,7 +559,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {isMobile ? 'Descargar' : 'Descargar Certificado Digital'}
+                  {isDownloading ? 'Generando PDF...' : (isMobile ? 'Descargar' : 'Descargar Certificado Digital')}
                 </Button>
               </Box>
             </>

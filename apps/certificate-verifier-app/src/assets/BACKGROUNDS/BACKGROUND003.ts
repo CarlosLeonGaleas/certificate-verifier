@@ -357,12 +357,6 @@ const html_BACKGROUND003 = `
                     signDirector.style.display = "none";
                 }
             }
-            setTimeout(function() {
-                var userResponse = confirm("¿Desea imprimir el certificado?");
-                if (userResponse) {
-                    window.print();
-                }
-            }, 3000); // 3 segundos
         };
     </script>
 </body>

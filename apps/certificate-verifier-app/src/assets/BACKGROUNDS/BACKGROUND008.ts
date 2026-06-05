@@ -550,17 +550,7 @@ const html_BACKGROUND008 = `
                 "url('https://res.cloudinary.com/dkzhem9dj/image/upload/v1767880146/Bintech2025_ITCA_ponentes-CoordinadoraNodo_hppk5m.svg')";
         }
     }
-
-      startPrintConfirm();
     });
-
-    function startPrintConfirm() {
-      setTimeout(function () {
-        if (confirm('¿Desea imprimir el certificado?')) {
-          window.print();
-        }
-      }, 3000);
-    }
     </script>
 </body>
 </html>

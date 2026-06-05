@@ -392,12 +392,6 @@ const html_BACKGROUND009 = `
                         "url('https://res.cloudinary.com/dkzhem9dj/image/upload/v1767990652/Bintech2025_ITCA_asistente-CoordinadoraNodo_t1yete.svg')";
                 }
             }
-            setTimeout(function() {
-                var userResponse = confirm("¿Desea imprimir el certificado?");
-                if (userResponse) {
-                    window.print();
-                }
-            }, 2000); // 2 segundos
         };
     </script>
 </body>

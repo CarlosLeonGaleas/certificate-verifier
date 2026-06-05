@@ -341,12 +341,6 @@ const html_BACKGROUND006 = `
     <script>
         // Espera a que el documento HTML completo se cargue
         window.onload = function() {
-            setTimeout(function() {
-                var userResponse = confirm("¿Desea imprimir el certificado?");
-                if (userResponse) {
-                    window.print();
-                }
-            }, 3000); // 3 segundos
         };
     </script>
 </body>

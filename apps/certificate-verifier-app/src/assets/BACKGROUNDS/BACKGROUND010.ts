@@ -379,17 +379,7 @@ const html_BACKGROUND010 = `
             }
 
             adjustCertificaLabel();
-
-            startPrintConfirm();
         });
-
-        function startPrintConfirm() {
-            setTimeout(function () {
-                if (confirm('¿Desea imprimir el certificado?')) {
-                    window.print();
-                }
-            }, 3000);
-        }
     </script>
 </body>
 </html>
