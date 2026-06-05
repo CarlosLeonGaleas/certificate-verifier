@@ -39,6 +39,7 @@ import html_BACKGROUND005 from '../assets/BACKGROUNDS/BACKGROUND005';
 import html_BACKGROUND006 from '../assets/BACKGROUNDS/BACKGROUND006';
 import html_BACKGROUND008 from '../assets/BACKGROUNDS/BACKGROUND008';
 import html_BACKGROUND009 from '../assets/BACKGROUNDS/BACKGROUND009';
+import html_BACKGROUND010 from '../assets/BACKGROUNDS/BACKGROUND010';
 
 const getTypeValue = (value: string): string => {
   const parts = value.split('|');
@@ -132,8 +133,11 @@ const generateCertificateHTML = (certificateData: Certificate.InfoType, transact
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant9.toUpperCase());
         html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
         break;
+      case 'BACKGROUND010':
+        html_template_BACKGROUND = html_BACKGROUND010;
+        break;
       default:
-        html_template_BACKGROUND = html_BACKGROUND003;
+        html_template_BACKGROUND = html_BACKGROUND005;
         break;
     }
 
@@ -231,29 +235,31 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
           '&:hover': { bgcolor: 'grey.100' },
         }}
       >
-        <Avatar 
-          sx={{ 
-            bgcolor: config.primaryColor, 
-            width: { xs: 32, sm: 40 }, 
+        <Avatar
+          sx={{
+            bgcolor: config.primaryColor,
+            width: { xs: 32, sm: 40 },
             height: { xs: 32, sm: 40 }
           }}
         >
           <Icon sx={{ color: 'white', fontSize: { xs: 16, sm: 20 } }} />
         </Avatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography 
-            variant="caption" 
-            color="text.secondary" 
+          <Typography
+            variant="caption"
+            color="text.secondary"
             gutterBottom
-            sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem'}, textAlign: 'justify',
-            display: 'block'}}
+            sx={{
+              fontSize: { xs: '0.7rem', sm: '0.75rem' }, textAlign: 'justify',
+              display: 'block'
+            }}
           >
             <strong>{label}</strong>
           </Typography>
-          <Typography 
-            variant="body1" 
-            sx={{ 
-              wordBreak: 'break-word', 
+          <Typography
+            variant="body1"
+            sx={{
+              wordBreak: 'break-word',
               fontWeight: 500,
               textAlign: 'justify',
               fontSize: { xs: '0.875rem', sm: '1rem' }
@@ -303,16 +309,16 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
               justifyContent: 'center',
             }}
           >
-            <MilitaryTech 
-              sx={{ 
-                fontSize: { xs: 24, sm: 28, md: 32 }, 
-                color: config.primaryColor 
-              }} 
+            <MilitaryTech
+              sx={{
+                fontSize: { xs: 24, sm: 28, md: 32 },
+                color: config.primaryColor
+              }}
             />
           </Box>
-          <Typography 
+          <Typography
             variant={isMobile ? 'h6' : 'h5'}
-            fontWeight="bold" 
+            fontWeight="bold"
             mb={1}
             sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' } }}
           >
@@ -324,18 +330,18 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
         <Box p={{ xs: 2, sm: 3, md: 4 }}>
           {/* Información Principal */}
           <Box mb={{ xs: 2, sm: 3 }}>
-            <Typography 
-              variant="h6" 
-              fontWeight={600} 
+            <Typography
+              variant="h6"
+              fontWeight={600}
               mb={{ xs: 2, sm: 3 }}
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 1,
                 fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' }
               }}
             >
-              <Person sx={{ fontSize: { xs: 20, sm: 24 } }} /> 
+              <Person sx={{ fontSize: { xs: 20, sm: 24 } }} />
               Información del Certificado
             </Typography>
             <Grid container spacing={{ xs: 2, sm: 3 }}>
@@ -358,18 +364,18 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
 
           {/* Información Institucional */}
           <Box mb={{ xs: 3, sm: 4, md: 5 }}>
-            <Typography 
-              variant="h6" 
-              fontWeight={600} 
+            <Typography
+              variant="h6"
+              fontWeight={600}
               mb={{ xs: 2, sm: 3 }}
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 1,
                 fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' }
               }}
             >
-              <Apartment sx={{ fontSize: { xs: 20, sm: 24 } }} /> 
+              <Apartment sx={{ fontSize: { xs: 20, sm: 24 } }} />
               Información Institucional
             </Typography>
             <Grid container spacing={{ xs: 2, sm: 3 }}>
@@ -387,18 +393,18 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
 
           {/* Fechas y Duración */}
           <Box mb={{ xs: 3, sm: 4, md: 5 }}>
-            <Typography 
-              variant="h6" 
-              fontWeight={600} 
+            <Typography
+              variant="h6"
+              fontWeight={600}
               mb={{ xs: 2, sm: 3 }}
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 1,
                 fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' }
               }}
             >
-              <CalendarToday sx={{ fontSize: { xs: 20, sm: 24 } }} /> 
+              <CalendarToday sx={{ fontSize: { xs: 20, sm: 24 } }} />
               Fechas y Duración
             </Typography>
             <Grid container spacing={{ xs: 2, sm: 3 }}>
@@ -419,18 +425,18 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
 
           {/* Información Técnica */}
           <Box mb={{ xs: 3, sm: 4, md: 5 }}>
-            <Typography 
-              variant="h6" 
-              fontWeight={600} 
+            <Typography
+              variant="h6"
+              fontWeight={600}
               mb={{ xs: 2, sm: 3 }}
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 1,
                 fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' }
               }}
             >
-              <Blockchain sx={{ fontSize: { xs: 20, sm: 24 } }} /> 
+              <Blockchain sx={{ fontSize: { xs: 20, sm: 24 } }} />
               Información Técnica (Blockchain)
             </Typography>
             <Box mb={{ xs: 2, sm: 3 }}>
