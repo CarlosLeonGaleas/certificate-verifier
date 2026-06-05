@@ -1,5 +1,5 @@
 import React from 'react';
-import { Certificate } from "@certificate-verifier/core"
+import { Certificate } from "@certificate-verifier/core/src/certificate/data";
 import QRCode from 'qrcode';
 import {
   Box,

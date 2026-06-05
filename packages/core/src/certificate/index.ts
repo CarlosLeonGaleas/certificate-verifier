@@ -3,6 +3,8 @@ import { Examples } from "../examples";
 import { ethers } from "ethers";
 import { Config } from "@certificate-verifier/core"
 import * as fs from "fs";
+import { Certificate as CertificateTypes } from "./data";
+
 
 export namespace Certificate {
     /*
@@ -63,23 +65,8 @@ export namespace Certificate {
             example: Examples.Certificate,
         });
     */
-    export const InfoSchema = z.object({
-        tokenId: z.string(),
-        name: z.string(),
-        documentId: z.string(),
-        course: z.string(),
-        description: z.string(),
-        institution: z.string(),
-        area: z.string(),
-        issuedDate: z.string(),
-        startDate: z.string(),
-        endDate: z.string(),
-        hoursWorked: z.number(),
-        signatoryName: z.string(),
-        hash: z.string(),
-        issueAt: z.string(),
-    })
-    export type InfoType = z.infer<typeof InfoSchema>
+    export const InfoSchema = CertificateTypes.InfoSchema;
+    export type InfoType = CertificateTypes.InfoType;
 
     // Interfaces and Types
     interface Config {
@@ -98,34 +85,9 @@ export namespace Certificate {
         institution: string;
     }
 
-    interface BasicCertificateInfo {
-        tokenId: string;
-        name: string;
-        documentId: string;
-        course: string;
-        institution: string;
-    }
-
-    interface CertificateMetadata {
-        tokenId: string;
-        name: string;
-        documentId: string;
-        course: string;
-        description: string;
-        institution: string;
-        area: string;
-        issuedDate: string;
-        startDate: string;
-        endDate: string;
-        hoursWorked: string;
-        signatoryName: string;
-    }
-
-    interface TransactionInfo {
-        hash: string;
-        blockNumber: number;
-        gasUsed: string;
-    }
+    type BasicCertificateInfo = CertificateTypes.BasicCertificateInfo;
+    type CertificateMetadata = CertificateTypes.CertificateMetadata;
+    type TransactionInfo = CertificateTypes.TransactionInfo;
 
     interface TokenIdResult {
         tokenId: string;

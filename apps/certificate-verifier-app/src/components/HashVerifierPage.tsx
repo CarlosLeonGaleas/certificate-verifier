@@ -5,7 +5,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CertificateFound from './CertificateFound';
 import CertificateNotFound from './CertificateNotFound';
 import StepLoader from './StepLoader';
-import { Certificate } from "@certificate-verifier/core";
+import { Certificate } from "@certificate-verifier/core/src/certificate/data";
 
 import { useInstitution } from '../contexts/InstitutionContext';
 
