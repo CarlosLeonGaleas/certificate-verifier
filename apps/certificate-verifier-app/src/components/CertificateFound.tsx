@@ -40,6 +40,7 @@ import html_BACKGROUND006 from '../assets/BACKGROUNDS/BACKGROUND006';
 import html_BACKGROUND008 from '../assets/BACKGROUNDS/BACKGROUND008';
 import html_BACKGROUND009 from '../assets/BACKGROUNDS/BACKGROUND009';
 import html_BACKGROUND010 from '../assets/BACKGROUNDS/BACKGROUND010';
+import html_BACKGROUND011 from '../assets/BACKGROUNDS/BACKGROUND011';
 
 const getTypeValue = (value: string): string => {
   const parts = value.split('|');
@@ -135,6 +136,14 @@ const buildCertificateHTMLContent = (certificateData: Certificate.InfoType, tran
     }
     case 'BACKGROUND010':
       html_template_BACKGROUND = html_BACKGROUND010;
+      break;
+    case 'BACKGROUND011':
+      html_template_BACKGROUND = html_BACKGROUND011;
+      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND011');
+      break;
+    case 'BACKGROUND012':
+      html_template_BACKGROUND = html_BACKGROUND011;
+      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND012');
       break;
     default:
       html_template_BACKGROUND = html_BACKGROUND005;

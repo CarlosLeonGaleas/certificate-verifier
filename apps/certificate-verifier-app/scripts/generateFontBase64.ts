@@ -9,10 +9,11 @@ const fonts = [
   { name: 'KARBON_BOLD', file: 'Karbon-Bold.otf' },
   { name: 'KARBON_BOLD_ITALIC', file: 'Karbon-BoldItalic.otf' },
   { name: 'KARBON_MEDIUM', file: 'Karbon-Medium.otf' },
+  { name: 'KARBON_REGULAR', file: 'Karbon-Regular.otf' },
 ];
 
 let output = `// Auto-generated file - Do not edit manually
-// Generated on ${new Date().toISOString()}
+// Generated with generateFontBase64.ts on ${new Date().toISOString()}
 
 `;
 
