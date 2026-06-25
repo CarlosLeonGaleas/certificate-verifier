@@ -13,6 +13,7 @@ export namespace Examples {
         issuedDate: "Sangolquí, 20 de octubre del 2024",
         hoursWorked: 5,
         signatoryName: "PhD. Marcelo Zambrano",
-        hash: "0xdsggsdgdsgdsgdssdegesdf"
+        hash: "0xdsggsdgdsgdsgdssdegesdf",
+        issueAt: "2026-06-25T14:34:22Z"
     }
 }

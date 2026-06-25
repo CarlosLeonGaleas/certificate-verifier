@@ -7,13 +7,14 @@
     "dev": "bun --watch run index.ts"
   },
   "dependencies": {
+    "@certificate-verifier/core": "workspace: *",
     "@hono/zod-validator": "^0.5.0",
     "@scalar/hono-api-reference": "^0.8.10",
+    "@supabase/supabase-js": "^2.108.2",
     "ethers": "6.14.3",
     "hono": "^4.7.10",
     "hono-openapi": "^0.4.8",
     "zod": "^3.25.7",
-    "zod-openapi": "^4.2.4",
-    "@certificate-verifier/core": "workspace: *"
+    "zod-openapi": "^4.2.4"
   }
 }

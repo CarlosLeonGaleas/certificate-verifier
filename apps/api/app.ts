@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { certificate } from './certificate'
+import { issuer } from './issuer'
 import { ErrorCodes } from './error';
 import { openAPISpecs } from 'hono-openapi'
 import { Scalar } from '@scalar/hono-api-reference';
@@ -13,6 +14,7 @@ const app = new Hono();
 
 app
     .route("/api/certificate", certificate)
+    .route("/api/issuer", issuer)
     .get(
         '/openapi',
         openAPISpecs(app, {

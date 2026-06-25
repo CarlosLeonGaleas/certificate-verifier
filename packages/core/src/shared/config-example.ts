@@ -16,8 +16,14 @@ export namespace Config {
     export const API_NETWORK_URL = getEnvOrThrow("API_NETWORK_URL");
     export const PRIVATE_KEY = getEnvOrThrow("PRIVATE_KEY");
 
+    // Retrieve Supabase and Security configurations
+    export const SUPABASE_URL = getEnvOrThrow("SUPABASE_URL");
+    export const SUPABASE_SECRET_KEY = getEnvOrThrow("SUPABASE_SECRET_KEY");
+    export const JWT_SECRET = getEnvOrThrow("JWT_SECRET");
+    export const APP_SECRET_KEY = getEnvOrThrow("APP_SECRET_KEY");
+
     // Optional URL configuration helper for local frontend or integrations
-    export const API_BACKEND_URL_BASE = typeof process !== "undefined" && process.env 
-        ? process.env.API_BACKEND_URL_BASE || "" 
+    export const API_BACKEND_URL_BASE = typeof process !== "undefined" && process.env
+        ? process.env.API_BACKEND_URL_BASE || ""
         : "";
 }
