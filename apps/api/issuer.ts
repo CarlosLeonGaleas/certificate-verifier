@@ -104,8 +104,8 @@ issuer.post(
         username: user.username,
         institutionId: user.institutionID,
         contact_email: user.contact_email,
-        // Expire in 30 minutes
-        exp: Math.floor(Date.now() / 1000) + 30 * 60
+        // Expire in 1 hour
+        exp: Math.floor(Date.now() / 1000) + 60 * 60
       };
 
       const token = await sign(payload, JWT_SECRET);
@@ -140,13 +140,153 @@ issuer.post(
   }
 );
 
-// Protected routes placeholders for testing JWT validity
+// Get user's available areas
 issuer.get('/areas', async (c) => {
   const user = c.get('user');
-  return c.json({ success: true, message: 'JWT validation successful', user });
+  const userId = user.userId;
+
+  try {
+    const { data, error } = await supabase
+      .from('User_Area')
+      .select('is_creator, Area (areaID, institutionID, area_code, area_name, created_at)')
+      .eq('userID', userId)
+      .eq('is_avaliable', true);
+
+    if (error) {
+      console.error('Error fetching areas from Supabase:', error);
+      return c.json(
+        {
+          type: 'database',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error al consultar las áreas en la base de datos.'
+        },
+        500
+      );
+    }
+
+    const areas = (data || [])
+      .filter((item: any) => item.Area !== null)
+      .map((item: any) => ({
+        areaID: item.Area.areaID,
+        institutionID: item.Area.institutionID,
+        area_code: item.Area.area_code,
+        area_name: item.Area.area_name,
+        created_at: item.Area.created_at,
+        is_creator: item.is_creator
+      }));
+
+    return c.json(areas, 200);
+  } catch (error) {
+    console.error('Error in /areas handler:', error);
+    return c.json(
+      {
+        type: 'internal',
+        code: ErrorCodes.Server.INTERNAL_ERROR,
+        message: 'Error interno del servidor al procesar la solicitud de áreas.'
+      },
+      500
+    );
+  }
 });
 
+// Get user's available events
 issuer.get('/events', async (c) => {
   const user = c.get('user');
-  return c.json({ success: true, message: 'JWT validation successful', user });
+  const userId = user.userId;
+
+  try {
+    const { data, error } = await supabase
+      .from('User_Event')
+      .select('is_creator, Event (eventID, event_code, event_name, created_at, institutionID, templateID, details)')
+      .eq('userID', userId)
+      .eq('is_avaliable', true);
+
+    if (error) {
+      console.error('Error fetching events from Supabase:', error);
+      return c.json(
+        {
+          type: 'database',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error al consultar los eventos en la base de datos.'
+        },
+        500
+      );
+    }
+
+    const events = (data || [])
+      .filter((item: any) => item.Event !== null)
+      .map((item: any) => ({
+        eventID: item.Event.eventID,
+        event_code: item.Event.event_code,
+        event_name: item.Event.event_name,
+        created_at: item.Event.created_at,
+        institutionID: item.Event.institutionID,
+        templateID: item.Event.templateID,
+        details: item.Event.details,
+        is_creator: item.is_creator
+      }));
+
+    return c.json(events, 200);
+  } catch (error) {
+    console.error('Error in /events handler:', error);
+    return c.json(
+      {
+        type: 'internal',
+        code: ErrorCodes.Server.INTERNAL_ERROR,
+        message: 'Error interno del servidor al procesar la solicitud de eventos.'
+      },
+      500
+    );
+  }
+});
+
+// Get user's available templates
+issuer.get('/templates', async (c) => {
+  const user = c.get('user');
+  const userId = user.userId;
+
+  try {
+    const { data, error } = await supabase
+      .from('User_Template')
+      .select('is_creator, Template (templateID, template_code, template_name, template_details, created_at, updated_at, institutionID)')
+      .eq('userID', userId)
+      .eq('is_avaliable', true);
+
+    if (error) {
+      console.error('Error fetching templates from Supabase:', error);
+      return c.json(
+        {
+          type: 'database',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error al consultar las plantillas en la base de datos.'
+        },
+        500
+      );
+    }
+
+    const templates = (data || [])
+      .filter((item: any) => item.Template !== null)
+      .map((item: any) => ({
+        templateID: item.Template.templateID,
+        template_code: item.Template.template_code,
+        template_name: item.Template.template_name,
+        template_details: item.Template.template_details,
+        created_at: item.Template.created_at,
+        updated_at: item.Template.updated_at,
+        institutionID: item.Template.institutionID,
+        is_creator: item.is_creator
+      }));
+
+    return c.json(templates, 200);
+  } catch (error) {
+    console.error('Error in /templates handler:', error);
+    return c.json(
+      {
+        type: 'internal',
+        code: ErrorCodes.Server.INTERNAL_ERROR,
+        message: 'Error interno del servidor al procesar la solicitud de plantillas.'
+      },
+      500
+    );
+  }
 });
