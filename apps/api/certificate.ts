@@ -1,6 +1,6 @@
 // import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { Certificate, Examples } from "@certificate-verifier/core"
+import { Certificate, Examples } from "../../packages/core"
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
 import { z } from 'zod';

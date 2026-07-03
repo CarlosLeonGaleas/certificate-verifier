@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { Config } from "@certificate-verifier/core"
+import { Config } from "../shared/config"
 import * as fs from "fs";
 
 interface CertificateEventArgs {

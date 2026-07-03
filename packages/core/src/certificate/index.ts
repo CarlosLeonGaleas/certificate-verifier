@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Examples } from "../examples";
 import { ethers } from "ethers";
-import { Config } from "@certificate-verifier/core"
+import { Config } from "../shared/config"
 import * as fs from "fs";
 import { Certificate as CertificateTypes } from "./data";
 

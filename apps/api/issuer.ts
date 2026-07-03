@@ -1,13 +1,14 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { sign } from 'hono/jwt';
+import { argon2Verify } from 'hash-wasm';
 import { supabase } from './supabaseClient';
 import { signatureMiddleware, jwtAuthMiddleware } from './authMiddleware';
 import { validator, ErrorResponses } from './common';
 import { ErrorCodes } from './error';
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
-import { Config } from '@certificate-verifier/core';
+import { Config } from '../../packages/core';
 
 const JWT_SECRET = Config.JWT_SECRET;
 
@@ -83,8 +84,11 @@ issuer.post(
         );
       }
 
-      // 2. Validate password using Bun native argon2id verification
-      const isPasswordValid = await Bun.password.verify(password, user.password_hash);
+      // 2. Validate password using WebAssembly/pure JS argon2id verification (compatible with Node.js and Bun)
+      const isPasswordValid = await argon2Verify({
+        password: password,
+        hash: user.password_hash
+      });
       
       if (!isPasswordValid) {
         console.warn(`Failed login attempt for username: ${username}. Password mismatch.`);
@@ -132,7 +136,7 @@ issuer.post(
         {
           type: 'internal',
           code: ErrorCodes.Server.INTERNAL_ERROR,
-          message: 'Error interno en el servidor durante la autenticación.'
+          message: `Error interno en el servidor: ${error instanceof Error ? error.message : String(error)}`
         },
         500
       );

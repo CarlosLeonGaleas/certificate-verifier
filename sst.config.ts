@@ -13,13 +13,14 @@ export default $config({
 
     const api = new sst.aws.Function("api",{
       handler: "apps/api/handler.handler",
+      runtime: "nodejs22.x",
       url: true,
       environment: {
         API_NETWORK_URL: process.env.API_NETWORK_URL as string,
         CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS as string,
         PRIVATE_KEY: process.env.PRIVATE_KEY as string,
         SUPABASE_URL: process.env.SUPABASE_URL as string,
-        SUPABASE_KEY: process.env.SUPABASE_KEY as string,
+        SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY as string,
         JWT_SECRET: process.env.JWT_SECRET as string,
         APP_SECRET_KEY: process.env.APP_SECRET_KEY as string,
       }

@@ -1,7 +1,7 @@
 const fs = require("fs");
 const csv = require("csv-parser");
 const { ethers } = require("ethers");
-import { Config } from "@certificate-verifier/core"
+import { Config } from "../shared/config"
 
 // Interfaces and Types
 interface ConfigType {
