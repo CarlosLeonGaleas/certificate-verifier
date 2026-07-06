@@ -643,9 +643,6 @@ export namespace Certificate {
             }
         }
 
-        /**
-         * Verify certificate using the retrieved data
-         */
         async verifyCertificate(
             tokenId: string | number,
             name: string,
@@ -667,6 +664,164 @@ export namespace Certificate {
             } catch (error) {
                 console.error(`❌ Verification failed:`, (error as Error).message);
                 return false;
+            }
+        }
+    }
+
+    export const IssuanceSchema = CertificateTypes.IssuanceSchema;
+    export type IssuanceType = CertificateTypes.IssuanceType;
+
+    interface GasConfig {
+        type: number;
+        maxFeePerGas?: bigint;
+        maxPriorityFeePerGas?: bigint;
+        gasPrice?: bigint;
+        gasLimit: number;
+    }
+
+    export class CertificateIssuer {
+        private provider: ethers.JsonRpcProvider;
+        private wallet: ethers.Wallet;
+        private contract: ethers.Contract;
+
+        constructor() {
+            this.provider = new ethers.JsonRpcProvider(Config.API_NETWORK_URL);
+            this.wallet = new ethers.Wallet(Config.PRIVATE_KEY, this.provider);
+            const abi = [
+                ...CONTRACT_ABI,
+                {
+                    "inputs": [
+                        {
+                            "components": [
+                                { "internalType": "string", "name": "name", "type": "string" },
+                                { "internalType": "string", "name": "documentId", "type": "string" },
+                                { "internalType": "string", "name": "course", "type": "string" },
+                                { "internalType": "string", "name": "description", "type": "string" },
+                                { "internalType": "string", "name": "institution", "type": "string" },
+                                { "internalType": "string", "name": "area", "type": "string" },
+                                { "internalType": "string", "name": "issuedDate", "type": "string" },
+                                { "internalType": "string", "name": "startDate", "type": "string" },
+                                { "internalType": "string", "name": "endDate", "type": "string" },
+                                { "internalType": "uint256", "name": "hoursWorked", "type": "uint256" },
+                                { "internalType": "string", "name": "signatoryName", "type": "string" }
+                            ],
+                            "internalType": "struct AcademicCertificate.CertificateIssuanceParams",
+                            "name": "params",
+                            "type": "tuple"
+                        }
+                    ],
+                    "name": "issueCertificate",
+                    "outputs": [
+                        { "internalType": "uint256", "name": "", "type": "uint256" }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                }
+            ];
+            this.contract = new ethers.Contract(Config.CONTRACT_ADDRESS, abi, this.wallet);
+        }
+
+        private async getDynamicGasPrice(): Promise<GasConfig> {
+            const defaultGasLimit = 1200000;
+            const defaultGasPrice = 100000000000n; // 100 gwei
+            const defaultMaxFee = 150000000000n; // 150 gwei
+            const defaultPriorityFee = 50000000000n; // 50 gwei
+
+            try {
+                const feeData = await this.provider.getFeeData();
+                if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
+                    return {
+                        type: 2,
+                        maxFeePerGas: feeData.maxFeePerGas * 2n,
+                        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas * 2n,
+                        gasLimit: defaultGasLimit
+                    };
+                } else {
+                    return {
+                        type: 0,
+                        gasPrice: feeData.gasPrice ? feeData.gasPrice * 2n : defaultGasPrice,
+                        gasLimit: defaultGasLimit
+                    };
+                }
+            } catch (error) {
+                console.warn("Could not fetch dynamic gas price, using fallback:", (error as Error).message);
+                return {
+                    type: 2,
+                    maxFeePerGas: defaultMaxFee,
+                    maxPriorityFeePerGas: defaultPriorityFee,
+                    gasLimit: defaultGasLimit
+                };
+            }
+        }
+
+        /**
+         * Simulates the certificate issuance call without executing the transaction.
+         * Used for testing/validating the call parameters.
+         */
+        async dryRunIssue(params: IssuanceType): Promise<boolean> {
+            try {
+                console.log(`[DryRun] Simulating certificate issuance for: ${params.name}`);
+                const { localIssued, localLimit, ...blockchainParams } = params as any;
+                if (typeof (this.contract.issueCertificate as any).staticCall === "function") {
+                    await (this.contract.issueCertificate as any).staticCall(blockchainParams);
+                } else if (this.contract.callStatic && typeof (this.contract.callStatic as any).issueCertificate === "function") {
+                    await (this.contract.callStatic as any).issueCertificate(blockchainParams);
+                } else {
+                    // Fallback simulation by estimating gas (fails if transaction would revert)
+                    await this.contract.issueCertificate.estimateGas(blockchainParams);
+                }
+                console.log("[DryRun] Simulation succeeded!");
+                return true;
+            } catch (error) {
+                console.error("[DryRun] Simulation failed:", (error as Error).message);
+                throw error;
+            }
+        }
+
+        async issue(params: IssuanceType): Promise<{
+            transactionHash: string;
+            tokenId: string;
+            blockNumber: number;
+            gasUsed: string;
+        }> {
+            try {
+                console.log(`\n🚀 Starting certificate issuance on Blockchain for: ${params.name}`);
+                const gasConfig = await this.getDynamicGasPrice();
+
+                const { localIssued, localLimit, ...blockchainParams } = params as any;
+                const tx = await this.contract.issueCertificate(blockchainParams, gasConfig);
+                console.log(`Transaction sent: ${tx.hash}`);
+
+                const receipt = await tx.wait();
+                if (!receipt) {
+                    throw new Error("Transaction wait returned no receipt.");
+                }
+
+                // Extract token ID from logs
+                let tokenId = "";
+                if (receipt.logs && receipt.logs.length > 0) {
+                    try {
+                        const parsedLog = this.contract.interface.parseLog(receipt.logs[0]);
+                        if (parsedLog && parsedLog.args && parsedLog.args.tokenId) {
+                            tokenId = parsedLog.args.tokenId.toString();
+                        }
+                    } catch (e) {
+                        if (receipt.logs[0].topics && receipt.logs[0].topics.length > 1) {
+                            tokenId = BigInt(receipt.logs[0].topics[1]).toString();
+                        }
+                    }
+                }
+
+                console.log(`✅ Certificate issued successfully. Token ID: ${tokenId}`);
+                return {
+                    transactionHash: tx.hash,
+                    tokenId: tokenId,
+                    blockNumber: receipt.blockNumber,
+                    gasUsed: receipt.gasUsed.toString()
+                };
+            } catch (error) {
+                console.error("❌ Certificate issuance failed in Blockchain:", (error as Error).message);
+                throw error;
             }
         }
     }

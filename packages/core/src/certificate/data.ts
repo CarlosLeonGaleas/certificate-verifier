@@ -48,4 +48,22 @@ export namespace Certificate {
         blockNumber: number;
         gasUsed: string;
     }
+
+    export const IssuanceSchema = z.object({
+        name: z.string(),
+        documentId: z.string(),
+        course: z.string(),
+        description: z.string(),
+        institution: z.string(),
+        area: z.string(),
+        issuedDate: z.string(),
+        startDate: z.string(),
+        endDate: z.string(),
+        hoursWorked: z.number().int().nonnegative(),
+        signatoryName: z.string(),
+        localIssued: z.number().int().nonnegative(),
+        localLimit: z.number().int().nonnegative()
+    });
+
+    export type IssuanceType = z.infer<typeof IssuanceSchema>;
 }

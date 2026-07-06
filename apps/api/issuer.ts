@@ -8,7 +8,7 @@ import { validator, ErrorResponses } from './common';
 import { ErrorCodes } from './error';
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
-import { Config } from '../../packages/core';
+import { Config, Certificate } from '../../packages/core';
 
 const JWT_SECRET = Config.JWT_SECRET;
 
@@ -294,3 +294,211 @@ issuer.get('/templates', async (c) => {
     );
   }
 });
+
+// Issue certificate in Blockchain
+issuer.post(
+  '/issue',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Emitir un certificado en la Blockchain',
+    description: 'Valida los límites del emisor, realiza la emisión en Polygon y actualiza el contador en Supabase.',
+    responses: {
+      201: {
+        description: 'Emisión exitosa',
+        content: {
+          'application/json': {
+            schema: resolver(
+              z.object({
+                success: z.boolean(),
+                message: z.string(),
+                data: z.object({
+                  transactionHash: z.string(),
+                  tokenId: z.string(),
+                  blockNumber: z.number(),
+                  gasUsed: z.string()
+                }),
+                user: z.object({
+                  certificates_issued: z.number(),
+                  certificates_limit: z.number()
+                })
+              })
+            )
+          }
+        }
+      },
+      400: ErrorResponses[400],
+      403: {
+        description: 'Límite de certificados excedido',
+        content: {
+          'application/json': {
+            schema: resolver(
+              z.object({
+                type: z.string(),
+                code: z.string(),
+                message: z.string()
+              })
+            )
+          }
+        }
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  validator('json', Certificate.IssuanceSchema),
+  async (c) => {
+    const certParams = c.req.valid('json');
+    const { localIssued, localLimit } = certParams;
+    const user = c.get('user');
+    const userId = user.userId;
+
+    try {
+      // 1. Validate certificates limit in Supabase
+      const { data: userData, error: userError } = await supabase
+        .from('User')
+        .select('certificates_issued, certificates_limit')
+        .eq('userID', userId)
+        .single();
+
+      if (userError || !userData) {
+        console.error('Error fetching user data for limits:', userError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error al verificar los límites del usuario en la base de datos.'
+          },
+          500
+        );
+      }
+
+      const dbIssued = userData.certificates_issued;
+      const dbLimit = userData.certificates_limit;
+
+      // --- Máquina de Estados y Sincronización (Casos de Fallback) ---
+
+      // Caso 3: Desincronización de límites
+      if (localLimit !== dbLimit) {
+        console.warn(`[Sync Check] Caso 3: Desincronización de límites. Local: ${localLimit}, DB: ${dbLimit}`);
+        return c.json(
+          {
+            success: false,
+            action: 'FORCE_LOGOUT',
+            code: 'LIMIT_MISMATCH',
+            message: 'Desincronización en el límite de certificados.'
+          },
+          409
+        );
+      }
+
+      // Evaluar diferencias en los contadores de emisión
+      if (localIssued !== dbIssued) {
+        // Caso 1: Desincronización de 1 unidad (Fallback +1)
+        if (localIssued === dbIssued + 1) {
+          console.log(`[Sync Check] Caso 1: Sincronizando Supabase con localIssued (${localIssued})`);
+          const { error: updateError } = await supabase
+            .from('User')
+            .update({ certificates_issued: localIssued })
+            .eq('userID', userId);
+
+          if (updateError) {
+            console.error('Error al actualizar contador en Caso 1:', updateError);
+            return c.json(
+              {
+                type: 'database',
+                code: ErrorCodes.Server.INTERNAL_ERROR,
+                message: 'Error al actualizar base de datos en recuperación de desincronización.'
+              },
+              500
+            );
+          }
+
+          return c.json(
+            {
+              success: false,
+              action: 'FORCE_LOGOUT',
+              code: 'SYNC_FALLBACK_RECOVERED',
+              message: 'El certificado anterior fue emitido en blockchain. Contador de base de datos sincronizado.'
+            },
+            409
+          );
+        }
+
+        // Caso 2: Cualquier otra diferencia de contador (Desincronización mayor)
+        console.warn(`[Sync Check] Caso 2: Desincronización mayor. Local: ${localIssued}, DB: ${dbIssued}`);
+        return c.json(
+          {
+            success: false,
+            action: 'FORCE_LOGOUT',
+            code: 'ISSUED_COUNT_MISMATCH',
+            message: 'Desincronización en el contador de certificados emitidos.'
+          },
+          409
+        );
+      }
+
+      // Caso 0: Sincronización normal (localIssued === dbIssued)
+      if (dbIssued >= dbLimit) {
+        return c.json(
+          {
+            type: 'authorization',
+            code: 'CERTIFICATE_LIMIT_EXCEEDED',
+            message: `Límite de certificados excedido. Límite: ${dbLimit}, Emitidos: ${dbIssued}`
+          },
+          403
+        );
+      }
+
+      // 2. Issue the certificate in Blockchain
+      const certificateIssuer = new Certificate.CertificateIssuer();
+      const blockchainResult = await certificateIssuer.issue(certParams);
+
+      // 3. Update certificates_issued count in Supabase
+      const newIssuedCount = dbIssued + 1;
+      const { error: updateError } = await supabase
+        .from('User')
+        .update({ certificates_issued: newIssuedCount })
+        .eq('userID', userId);
+
+      if (updateError) {
+        console.error('Error updating certificates_issued count in Supabase:', updateError);
+        return c.json(
+          {
+            success: true,
+            message: 'Certificado emitido en blockchain, pero hubo un error al actualizar los contadores locales.',
+            data: blockchainResult,
+            user: {
+              certificates_issued: dbIssued,
+              certificates_limit: dbLimit
+            }
+          },
+          201
+        );
+      }
+
+      return c.json(
+        {
+          success: true,
+          message: 'Certificado emitido exitosamente en la blockchain.',
+          data: blockchainResult,
+          user: {
+            certificates_issued: newIssuedCount,
+            certificates_limit: dbLimit
+          }
+        },
+        201
+      );
+
+    } catch (error) {
+      console.error('Error issuing certificate:', error);
+      return c.json(
+        {
+          type: 'blockchain',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: `Error al emitir el certificado en la blockchain: ${error instanceof Error ? error.message : String(error)}`
+        },
+        500
+      );
+    }
+  }
+);
+
