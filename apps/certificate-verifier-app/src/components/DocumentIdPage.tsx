@@ -16,7 +16,13 @@ const getHeaders = () => {
     };
 };
 
-const getCertificates = async (documentId: string = ''): Promise<any[][] | null> => {
+interface GetCertificatesResult {
+    success: boolean;
+    data: any[][] | null;
+    errorType?: 'network';
+}
+
+const getCertificates = async (documentId: string = ''): Promise<GetCertificatesResult> => {
     try {
         const url = new URL(`${url_backend_api}/certificate/documentId/certificates/` + documentId);
         const response = await fetch(url, {
@@ -26,24 +32,30 @@ const getCertificates = async (documentId: string = ''): Promise<any[][] | null>
 
         if (!response.ok) {
             console.error('Error en la respuesta:', response.status, response.statusText);
-            return null;
+            return { success: false, data: null, errorType: 'network' };
         }
 
         const contentType = response.headers.get('content-type');
         if (!contentType?.includes('application/json')) {
             console.error('La respuesta no es JSON');
-            return null;
+            return { success: false, data: null, errorType: 'network' };
         }
 
         const datos: { data: any[][] } = await response.json();
-        return datos.data;
+        return { success: true, data: datos.data };
     } catch (error) {
         console.error("Error al verificar el certificado:", error);
-        return null;
+        return { success: false, data: null, errorType: 'network' };
     }
 };
 
-const countCertificates = async (documentId: string = ''): Promise<number> => {
+interface CountCertificatesResult {
+    success: boolean;
+    count: number;
+    errorType?: 'not_found' | 'network';
+}
+
+const countCertificates = async (documentId: string = ''): Promise<CountCertificatesResult> => {
     try {
         const url = new URL(`${url_backend_api}/certificate/documentId/count/` + documentId);
 
@@ -52,23 +64,27 @@ const countCertificates = async (documentId: string = ''): Promise<number> => {
             headers: getHeaders(),
         });
 
+        if (response.status === 404) {
+            return { success: false, count: 0, errorType: 'not_found' };
+        }
+
         if (!response.ok) {
             console.error('Error en la respuesta:', response.status, response.statusText);
-            return 0;
+            return { success: false, count: 0, errorType: 'network' };
         }
 
         const contentType = response.headers.get('content-type');
         if (!contentType?.includes('application/json')) {
             console.error('La respuesta no es JSON');
-            return 0;
+            return { success: false, count: 0, errorType: 'network' };
         }
 
         const datos: { data: number } = await response.json();
-        return datos.data;
+        return { success: true, count: datos.data };
 
     } catch (error) {
         console.error("Error al contar los certificados:", error);
-        return 0;
+        return { success: false, count: 0, errorType: 'network' };
     }
 }
 
@@ -81,6 +97,7 @@ const DocumentIdPage: React.FC = () => {
     const [showResults, setShowResults] = useState<boolean>(false);
     const [loaderActive, setLoaderActive] = useState(false);
     const [loaderCompleted, setLoaderCompleted] = useState(false);
+    const [errorType, setErrorType] = useState<'not_found' | 'network' | null>(null);
 
     const { config } = useInstitution();
     const theme = useTheme();
@@ -109,22 +126,32 @@ const DocumentIdPage: React.FC = () => {
         setCertificateData(null);
         setLoaderActive(true);
         setLoaderCompleted(false);
+        setErrorType(null);
 
         try {
-            const certificatesCount = await countCertificates(documentIdToVerify);
+            const countResult = await countCertificates(documentIdToVerify);
 
-            if (certificatesCount) {
-                const certificatesData = await getCertificates(documentIdToVerify);
-                setCertificateFound(true);
-                setCertificateData(certificatesData);
+            if (countResult.success && countResult.count > 0) {
+                const getResult = await getCertificates(documentIdToVerify);
+                if (getResult.success && getResult.data) {
+                    setCertificateFound(true);
+                    setCertificateData(getResult.data);
+                    setErrorType(null);
+                } else {
+                    setCertificateFound(false);
+                    setCertificateData(null);
+                    setErrorType(getResult.errorType || 'network');
+                }
             } else {
                 setCertificateFound(false);
                 setCertificateData(null);
+                setErrorType(countResult.errorType || 'not_found');
             }
         } catch (error) {
             console.error("Error en la verificación:", error);
             setCertificateData(null);
             setCertificateFound(false);
+            setErrorType('network');
         }
         setLoaderCompleted(true);
     };
@@ -194,7 +221,10 @@ const DocumentIdPage: React.FC = () => {
                                 />
                             ))
                         ) : (
-                            <CertificateNotFound message='No hay certificados asociados a la cédula ingresada' />
+                            <CertificateNotFound 
+                                type={errorType || 'not_found'} 
+                                message={errorType === 'network' ? undefined : 'No hay certificados asociados a la cédula ingresada'} 
+                            />
                         )}
                     </Box>
                 )}

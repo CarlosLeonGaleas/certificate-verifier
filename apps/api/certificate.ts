@@ -54,17 +54,26 @@ export const certificate = new Hono()
             const hash = c.req.valid("param").hash;
             const retriever = new Certificate.CertificateRetriever();
 
-            const certificateData = await retriever.getCompleteInfoFromTxHash(hash);
+            try {
+                const certificateData = await retriever.getCompleteInfoFromTxHash(hash);
 
-            if (!certificateData) {
+                if (!certificateData) {
+                    return c.json({
+                        type: "not_found",
+                        code: "certificate_not_found",
+                        message: "The requested certificate could not be found",
+                    }, 404);
+                };
+
+                return c.json({ data: certificateData }, 200);
+            } catch (error) {
+                console.error("Error retrieving certificate by transaction hash:", error);
                 return c.json({
                     type: "not_found",
                     code: "certificate_not_found",
                     message: "The requested certificate could not be found",
                 }, 404);
-            };
-
-            return c.json({ data: certificateData }, 200)
+            }
         })
     .get("/id/:tokenId",
         describeRoute({
@@ -93,17 +102,26 @@ export const certificate = new Hono()
             const tokenId = c.req.valid("param").tokenId;
             const retriever = new Certificate.CertificateRetriever();
 
-            const certificateData = await retriever.getCertificateData(tokenId);
+            try {
+                const certificateData = await retriever.getCertificateData(tokenId);
 
-            if (!certificateData) {
+                if (!certificateData) {
+                    return c.json({
+                        type: "not_found",
+                        code: "certificate_not_found",
+                        message: "The requested certificate could not be found",
+                    }, 404);
+                }
+
+                return c.json({ data: certificateData }, 200)
+            } catch (error) {
+                console.error(`Error retrieving certificate by token ID ${tokenId}:`, error);
                 return c.json({
                     type: "not_found",
                     code: "certificate_not_found",
                     message: "The requested certificate could not be found",
                 }, 404);
             }
-
-            return c.json({ data: certificateData }, 200)
         })
     .get("/documentId/count/:documentId",
         describeRoute({
@@ -132,17 +150,26 @@ export const certificate = new Hono()
             const documentId = c.req.valid("param").documentId;
             const retriever = new Certificate.CertificateRetriever();
 
-            const certificatesCount = await retriever.getCertificatesCountFromDocumentId(documentId);
+            try {
+                const certificatesCount = await retriever.getCertificatesCountFromDocumentId(documentId);
 
-            if (!certificatesCount) {
+                if (certificatesCount === undefined || certificatesCount === null) {
+                    return c.json({
+                        type: "not_found",
+                        code: "certificate_not_found",
+                        message: "The requested certificate could not be found",
+                    }, 404);
+                }
+
+                return c.json({ data: certificatesCount }, 200);
+            } catch (error) {
+                console.error("Error getting certificates count from document ID:", error);
                 return c.json({
                     type: "not_found",
                     code: "certificate_not_found",
                     message: "The requested certificate could not be found",
                 }, 404);
             }
-
-            return c.json({ data: certificatesCount }, 200)
         })
     .get("/documentId/certificates/:documentId",
         describeRoute({

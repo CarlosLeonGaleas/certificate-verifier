@@ -2,12 +2,35 @@ import React from 'react';
 
 import { Box, Typography } from '@mui/material';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
 
 interface CertificateNotFoundProps {
   message?: string;
+  type?: 'not_found' | 'network';
 }
 
-const CertificateNotFound: React.FC<CertificateNotFoundProps> = ({ message = 'Certificado No Existe' }) => {
+const CertificateNotFound: React.FC<CertificateNotFoundProps> = ({
+  message,
+  type = 'not_found'
+}) => {
+  const isNetwork = type === 'network';
+
+  const headerBg = isNetwork
+    ? 'linear-gradient(90deg, #ed6c02, #e65100)'
+    : 'linear-gradient(90deg, #b91c1c, #dc2626)';
+
+  const iconColor = isNetwork ? '#ed6c02' : '#b91c1c';
+
+  const title = isNetwork
+    ? 'Error de Conexión'
+    : 'Certificado No Registrado en la Blockchain';
+
+  const defaultMessage = isNetwork
+    ? 'No se pudo establecer conexión con el servidor que interactúa con la Blockchain. Por favor, inténtelo más tarde. Si el problema persiste, póngase en contacto con: investigacion@ister.edu.ec'
+    : 'No existe un certificado con los datos proporcionados.';
+
+  const IconComponent = isNetwork ? CloudOffIcon : ReportProblemIcon;
+
   return (
     <Box
       maxWidth="900px"
@@ -20,6 +43,7 @@ const CertificateNotFound: React.FC<CertificateNotFoundProps> = ({ message = 'Ce
       overflow="hidden"
       border={1}
       borderColor="grey.300"
+      width="100%"
     >
       {/* Header */}
       <Box
@@ -27,7 +51,7 @@ const CertificateNotFound: React.FC<CertificateNotFoundProps> = ({ message = 'Ce
           px: 6,
           py: 6,
           textAlign: 'center',
-          background: 'linear-gradient(90deg, #b91c1c, #dc2626)', // degradado rojo
+          background: headerBg,
           color: 'white',
         }}
       >
@@ -44,10 +68,10 @@ const CertificateNotFound: React.FC<CertificateNotFoundProps> = ({ message = 'Ce
             justifyContent: 'center',
           }}
         >
-          <ReportProblemIcon sx={{ fontSize: 32, color: '#b91c1c'}} />
+          <IconComponent sx={{ fontSize: 32, color: iconColor }} />
         </Box>
         <Typography variant="h5" fontWeight="bold">
-          Certificado No Registrado en la Blockchain
+          {title}
         </Typography>
       </Box>
 
@@ -59,9 +83,9 @@ const CertificateNotFound: React.FC<CertificateNotFoundProps> = ({ message = 'Ce
           fontWeight={500}
           mb={2}
         >
-          {message || 'No existe un certificado con los datos proporcionados.'}
+          {message || defaultMessage}
         </Typography>
-        </Box>
+      </Box>
     </Box>
   );
 };

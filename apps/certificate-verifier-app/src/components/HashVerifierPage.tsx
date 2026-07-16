@@ -17,7 +17,13 @@ const getHeaders = () => {
     };
 };
 
-const verifyCertificate = async (hash: string = ''): Promise<Certificate.InfoType | null> => {
+interface VerifyResult {
+    success: boolean;
+    data: Certificate.InfoType | null;
+    errorType?: 'not_found' | 'network';
+}
+
+const verifyCertificate = async (hash: string = ''): Promise<VerifyResult> => {
     try {
         const url = new URL(`${url_backend_api}/certificate/hash/` + hash);
 
@@ -26,25 +32,29 @@ const verifyCertificate = async (hash: string = ''): Promise<Certificate.InfoTyp
             headers: getHeaders(),
         });
 
+        if (response.status === 404) {
+            return { success: false, data: null, errorType: 'not_found' };
+        }
+
         if (!response.ok) {
             console.error('Error en la respuesta:', response.status, response.statusText);
-            return null;
+            return { success: false, data: null, errorType: 'network' };
         }
 
         // Verificar que la respuesta sea JSON
         const contentType = response.headers.get('content-type');
         if (!contentType?.includes('application/json')) {
             console.error('La respuesta no es JSON');
-            return null;
+            return { success: false, data: null, errorType: 'network' };
         }
 
         // Parsear la respuesta
         const datos: { data: Certificate.InfoType } = await response.json();
-        return datos.data;
+        return { success: true, data: datos.data };
 
     } catch (error) {
         console.error("Error al verificar el certificado:", error);
-        return null;
+        return { success: false, data: null, errorType: 'network' };
     }
 }
 
@@ -57,6 +67,7 @@ const HashVerifierPage: React.FC = () => {
     const [showResults, setShowResults] = useState<boolean>(false);
     const [loaderActive, setLoaderActive] = useState(false);
     const [loaderCompleted, setLoaderCompleted] = useState(false);
+    const [errorType, setErrorType] = useState<'not_found' | 'network' | null>(null);
 
     const { config } = useInstitution();
     const theme = useTheme();
@@ -85,21 +96,25 @@ const HashVerifierPage: React.FC = () => {
         setCertificateData(null);
         setLoaderActive(true);
         setLoaderCompleted(false);
+        setErrorType(null);
 
         try {
             const result = await verifyCertificate(hashToVerify);
 
-            if (result) {
+            if (result.success && result.data) {
                 setCertificateFound(true);
-                setCertificateData(result);
+                setCertificateData(result.data);
+                setErrorType(null);
             } else {
                 setCertificateFound(false);
                 setCertificateData(null);
+                setErrorType(result.errorType || 'not_found');
             }
         } catch (error) {
             console.error("Error en la verificación:", error);
             setCertificateData(null);
             setCertificateFound(false);
+            setErrorType('network');
         }
 
         // señal al loader de que la API terminó
@@ -156,7 +171,10 @@ const HashVerifierPage: React.FC = () => {
                         {certificateData ? (
                             <CertificateFound {...certificateData} />
                         ) : (
-                            <CertificateNotFound message={`El hash no corresponde a una transacción existente`} />
+                            <CertificateNotFound 
+                                type={errorType || 'not_found'} 
+                                message={errorType === 'network' ? undefined : `El hash no corresponde a una transacción existente`} 
+                            />
                         )}
                     </Box>
                 )}

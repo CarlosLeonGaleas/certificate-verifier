@@ -17,7 +17,13 @@ const getHeaders = () => {
     };
 };
 
-const verifyCertificate = async (id: number = 0): Promise<Certificate.InfoType | null> => {
+interface VerifyResult {
+    success: boolean;
+    data: Certificate.InfoType | null;
+    errorType?: 'not_found' | 'network';
+}
+
+const verifyCertificate = async (id: number = 0): Promise<VerifyResult> => {
     try {
         const url = new URL(`${url_backend_api}/certificate/id/` + id.toString());
 
@@ -26,27 +32,31 @@ const verifyCertificate = async (id: number = 0): Promise<Certificate.InfoType |
             headers: getHeaders(),
         });
 
+        if (response.status === 404) {
+            return { success: false, data: null, errorType: 'not_found' };
+        }
+
         if (!response.ok) {
             console.error('Error en la respuesta:', response.status, response.statusText);
-            return null;
+            return { success: false, data: null, errorType: 'network' };
         }
 
         // Verificar que la respuesta sea JSON
         const contentType = response.headers.get('content-type');
         if (!contentType?.includes('application/json')) {
             console.error('La respuesta no es JSON');
-            return null;
+            return { success: false, data: null, errorType: 'network' };
         }
 
         // Parsear la respuesta
         const responseData: { data: Certificate.InfoType } = await response.json();
 
         // Tu backend devuelve { data: Certificate.InfoType }
-        return responseData.data;
+        return { success: true, data: responseData.data };
 
     } catch (error) {
         console.error("Error al verificar el certificado:", error);
-        return null;
+        return { success: false, data: null, errorType: 'network' };
     }
 }
 
@@ -59,6 +69,7 @@ const IdVerifierPage: React.FC = () => {
     const [showResults, setShowResults] = useState<boolean>(false);
     const [loaderActive, setLoaderActive] = useState(false);
     const [loaderCompleted, setLoaderCompleted] = useState(false);
+    const [errorType, setErrorType] = useState<'not_found' | 'network' | null>(null);
 
     const { config } = useInstitution();
     const theme = useTheme();
@@ -88,21 +99,25 @@ const IdVerifierPage: React.FC = () => {
         setCertificateData(null);
         setLoaderActive(true);
         setLoaderCompleted(false);
+        setErrorType(null);
 
         try {
             const result = await verifyCertificate(idToVerify);
 
-            if (result) {
+            if (result.success && result.data) {
                 setCertificateFound(true);
-                setCertificateData(result);
+                setCertificateData(result.data);
+                setErrorType(null);
             } else {
                 setCertificateFound(false);
                 setCertificateData(null);
+                setErrorType(result.errorType || 'not_found');
             }
         } catch (error) {
             console.error("Error en la verificación:", error);
             setCertificateData(null);
             setCertificateFound(false);
+            setErrorType('network');
         }
 
         // señal al loader de que la API terminó
@@ -159,7 +174,10 @@ const IdVerifierPage: React.FC = () => {
                         {certificateData ? (
                             <CertificateFound {...certificateData} />
                         ) : (
-                            <CertificateNotFound message={`El Token ID ${id} no existe`} />
+                            <CertificateNotFound 
+                                type={errorType || 'not_found'} 
+                                message={errorType === 'network' ? undefined : `El Token ID ${id} no existe`} 
+                            />
                         )}
                     </Box>
                 )}

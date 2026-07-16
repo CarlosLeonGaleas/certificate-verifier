@@ -9,8 +9,11 @@ import { cors } from 'hono/cors';
 
 const app = new Hono();
 
-// Removida la configuración de CORS - AWS Lambda Function URLs lo maneja automáticamente
-// app.use('*', cors({ origin: '*' }))
+// Habilitar CORS solo en desarrollo local (fuera de AWS Lambda)
+// En AWS, Lambda Function URLs maneja CORS automáticamente a nivel de infraestructura para evitar duplicar cabeceras.
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    app.use('*', cors({ origin: '*' }))
+}
 
 app
     .route("/api/certificate", certificate)
