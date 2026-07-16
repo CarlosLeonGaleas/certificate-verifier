@@ -32,15 +32,7 @@ import {
 
 import { useInstitution } from '../contexts/InstitutionContext';
 
-//PLANTILLA DE LOS DISTINTOS CERTIFICADOS EMITIDOS (Ubicación de los elementos y estilos)
-import html_BACKGROUND001 from '../assets/BACKGROUNDS/BACKGROUND001';
-import html_BACKGROUND003 from '../assets/BACKGROUNDS/BACKGROUND003';
-import html_BACKGROUND005 from '../assets/BACKGROUNDS/BACKGROUND005';
-import html_BACKGROUND006 from '../assets/BACKGROUNDS/BACKGROUND006';
-import html_BACKGROUND008 from '../assets/BACKGROUNDS/BACKGROUND008';
-import html_BACKGROUND009 from '../assets/BACKGROUNDS/BACKGROUND009';
-import html_BACKGROUND010 from '../assets/BACKGROUNDS/BACKGROUND010';
-import html_BACKGROUND011 from '../assets/BACKGROUNDS/BACKGROUND011';
+const url_backend_api = import.meta.env.VITE_API_BACKEND_URL_BASE;
 
 const getTypeValue = (value: string): string => {
   const parts = value.split('|');
@@ -71,83 +63,31 @@ const getTransactionHashQRCode = async (url: string) => {
   }
 };
 
-const buildCertificateHTMLContent = (certificateData: Certificate.InfoType, transactionHashQRBase64: string): string => {
-  let html_template_BACKGROUND = '';
+const buildCertificateHTMLContent = (
+  certificateData: Certificate.InfoType,
+  transactionHashQRBase64: string,
+  htmlTemplate: string
+): string => {
+  let html_template_BACKGROUND = htmlTemplate;
   const typeCertificate = getTypeValue(certificateData.course);
   const nameCourse = getTitleValue(certificateData.course);
   const backgroundCode = getBackgroundCode(certificateData.course);
 
   const urlTokenId = `https://d1uys4mzmfaahs.cloudfront.net/id/${certificateData.tokenId}`;
-  let urlHash = `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
+  const urlHash = certificateData.institution.includes('ITCA')
+    ? `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`
+    : `https://d1uys4mzmfaahs.cloudfront.net/hash/${certificateData.hash}`;
 
-  switch (backgroundCode) {
-    case 'BACKGROUND001':
-      html_template_BACKGROUND = html_BACKGROUND001;
-      break;
-    case 'BACKGROUND002':
-      html_template_BACKGROUND = html_BACKGROUND001;
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND002');
-      break;
-    case 'BACKGROUND003':
-      html_template_BACKGROUND = html_BACKGROUND003;
-      break;
-    case 'BACKGROUND004':
-      html_template_BACKGROUND = html_BACKGROUND003;
-      break;
-    case 'BACKGROUND005':
-      html_template_BACKGROUND = html_BACKGROUND005;
-      break;
-    case 'BACKGROUND006':
-      if (typeCertificate === "PROYECTO") {
-        html_template_BACKGROUND = html_BACKGROUND005;
-      } else {
-        html_template_BACKGROUND = html_BACKGROUND006;
-      }
-      break;
-    case 'BACKGROUND007':
-      html_template_BACKGROUND = html_BACKGROUND005;
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND007');
-      break;
-    case 'BACKGROUND008': {
-      html_template_BACKGROUND = html_BACKGROUND008;
-      urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
-      let variant8;
-      if (nameCourse.includes(':')) {
-        [variant8] = nameCourse.split(':').map(s => s.trim());
-      } else {
-        variant8 = 'PONENTE';
-      }
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant8.toUpperCase());
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
-      break;
+  // Process dynamic variant replacements for BACKGROUND008 and BACKGROUND009
+  if (backgroundCode === 'BACKGROUND008' || backgroundCode === 'BACKGROUND009') {
+    let variant;
+    if (nameCourse.includes(':')) {
+      [variant] = nameCourse.split(':').map(s => s.trim());
+    } else {
+      variant = backgroundCode === 'BACKGROUND008' ? 'PONENTE' : 'ASISTENTE';
     }
-    case 'BACKGROUND009': {
-      html_template_BACKGROUND = html_BACKGROUND009;
-      urlHash = `https://d1uys4mzmfaahs.cloudfront.net/ITCA/hash/${certificateData.hash}`;
-      let variant9;
-      if (nameCourse.includes(':')) {
-        [variant9] = nameCourse.split(':').map(s => s.trim());
-      } else {
-        variant9 = 'ASISTENTE';
-      }
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant9.toUpperCase());
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
-      break;
-    }
-    case 'BACKGROUND010':
-      html_template_BACKGROUND = html_BACKGROUND010;
-      break;
-    case 'BACKGROUND011':
-      html_template_BACKGROUND = html_BACKGROUND011;
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND011');
-      break;
-    case 'BACKGROUND012':
-      html_template_BACKGROUND = html_BACKGROUND011;
-      html_template_BACKGROUND = html_template_BACKGROUND.replace('{{BACKGROUND}}', 'BACKGROUND012');
-      break;
-    default:
-      html_template_BACKGROUND = html_BACKGROUND005;
-      break;
+    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{variant}}', variant.toUpperCase());
+    html_template_BACKGROUND = html_template_BACKGROUND.replace('{{documentID}}', certificateData.documentId);
   }
 
   html_template_BACKGROUND = html_template_BACKGROUND.replace('{{web-title}}', `${certificateData.tokenId}-${typeCertificate}-${certificateData.name}-${(function (text, maxLength) {
@@ -158,8 +98,10 @@ const buildCertificateHTMLContent = (certificateData: Certificate.InfoType, tran
   html_template_BACKGROUND = html_template_BACKGROUND.replace('{{cedula}}', certificateData.documentId);
   html_template_BACKGROUND = html_template_BACKGROUND.replace('{{description}}', certificateData.description);
   html_template_BACKGROUND = html_template_BACKGROUND.replace('{{issuedAt}}', certificateData.issuedDate);
+
   const paddedTokenID = String(certificateData.tokenId).padStart(4, '0');
   html_template_BACKGROUND = html_template_BACKGROUND.replace('{{tokenID}}', paddedTokenID);
+
   let url_blockchain;
   if (certificateData.hash) {
     url_blockchain = `https://polygonscan.com/tx/${certificateData.hash}#eventlog`;
@@ -203,7 +145,22 @@ const downloadCertificatePDF = async (certificateData: Certificate.InfoType, set
     }
 
     const transactionHashQRBase64 = await getTransactionHashQRCode(url);
-    const htmlRaw = buildCertificateHTMLContent(certificateData, transactionHashQRBase64);
+
+    // Fetch dynamic template HTML from API
+    const backgroundCode = getBackgroundCode(certificateData.course);
+    const typeCertificate = getTypeValue(certificateData.course);
+    const templateUrl = `${url_backend_api}/template/${backgroundCode}?type=${encodeURIComponent(typeCertificate)}`;
+
+    console.log(`Fetching template from API: ${templateUrl}`);
+    const response = await fetch(templateUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch template from API: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    const htmlTemplate = result.data.html;
+
+    const htmlRaw = buildCertificateHTMLContent(certificateData, transactionHashQRBase64, htmlTemplate);
 
     // Detect layout orientation
     const orientation = getOrientation(htmlRaw);
@@ -290,7 +247,7 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [isDownloading, setIsDownloading] = React.useState(false);
 
-  const InfoItem = ({ icon: Icon, label, value }) => {
+  const InfoItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: any }) => {
     if (!value && value !== 0) return null;
 
     return (
