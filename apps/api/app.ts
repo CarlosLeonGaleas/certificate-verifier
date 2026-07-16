@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { certificate } from './certificate'
 import { issuer } from './issuer'
+import { template } from './template'
 import { ErrorCodes } from './error';
 import { openAPISpecs } from 'hono-openapi'
 import { Scalar } from '@scalar/hono-api-reference';
@@ -18,6 +19,7 @@ if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
 app
     .route("/api/certificate", certificate)
     .route("/api/issuer", issuer)
+    .route("/api/template", template)
     .get(
         '/openapi',
         openAPISpecs(app, {
