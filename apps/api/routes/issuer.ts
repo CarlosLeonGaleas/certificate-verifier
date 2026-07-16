@@ -501,3 +501,249 @@ issuer.post(
     }
   }
 );
+
+// Disable template for user
+issuer.put(
+  '/templates/:templateId/disable',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Deshabilitar una plantilla para el usuario',
+    description: 'Modifica is_avaliable a false en la tabla User_Template para el usuario autenticado',
+    responses: {
+      200: {
+        description: 'Plantilla deshabilitada exitosamente',
+        content: {
+          'application/json': {
+            schema: resolver(z.object({ success: z.boolean(), message: z.string() }))
+          }
+        }
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const templateId = c.req.param('templateId');
+
+    const { error } = await supabase
+      .from('User_Template')
+      .update({
+        is_avaliable: false,
+        disabled_at: new Date().toISOString()
+      })
+      .eq('userID', userId)
+      .eq('templateID', templateId);
+
+    if (error) {
+      console.error('Error disabling template in Supabase:', error);
+      return c.json(
+        {
+          type: 'database',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error al deshabilitar la plantilla en la base de datos.'
+        },
+        500
+      );
+    }
+
+    return c.json({ success: true, message: 'Plantilla deshabilitada exitosamente' }, 200);
+  }
+);
+
+// Get available templates from user's institution (that the user does not have active)
+issuer.get(
+  '/templates/institution',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Obtener las plantillas de la institución que el usuario no tiene activas',
+    description: 'Filtra las plantillas por el institutionID del usuario y descarta las activas',
+    responses: {
+      200: {
+        description: 'Lista de plantillas de la institución disponibles'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const institutionId = user.institutionId;
+
+    try {
+      // 1. Fetch templates belonging to the user's institution
+      const { data: instTemplates, error: templatesError } = await supabase
+        .from('Template')
+        .select('templateID, template_code, template_name, template_details, created_at, updated_at, institutionID')
+        .eq('institutionID', institutionId);
+
+      if (templatesError) {
+        console.error('Error fetching institution templates:', templatesError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error al obtener las plantillas de la institución.'
+          },
+          500
+        );
+      }
+
+      // 2. Fetch all mappings for this user in User_Template
+      const { data: userTemplates, error: mappingsError } = await supabase
+        .from('User_Template')
+        .select('templateID, is_avaliable')
+        .eq('userID', userId);
+
+      if (mappingsError) {
+        console.error('Error fetching user template mappings:', mappingsError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error al obtener mapeos de plantillas de usuario.'
+          },
+          500
+        );
+      }
+
+      // Create lookup map
+      const userTemplateMap = new Map<string, boolean>(
+        (userTemplates || []).map((ut: any) => [ut.templateID, ut.is_avaliable])
+      );
+
+      // Filter templates: show if user doesn't have it or has it but disabled
+      const result = (instTemplates || [])
+        .filter((t: any) => {
+          const isAvailable = userTemplateMap.get(t.templateID);
+          return isAvailable === undefined || isAvailable === false;
+        })
+        .map((t: any) => {
+          const hasRecord = userTemplateMap.has(t.templateID);
+          return {
+            templateID: t.templateID,
+            template_code: t.template_code,
+            template_name: t.template_name,
+            template_details: t.template_details,
+            created_at: t.created_at,
+            updated_at: t.updated_at,
+            institutionID: t.institutionID,
+            hasRecord
+          };
+        });
+
+      return c.json(result, 200);
+    } catch (error) {
+      console.error('Error in /templates/institution handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor al procesar la consulta.'
+        },
+        500
+      );
+    }
+  }
+);
+
+// Obtain or enable a template for the user
+issuer.post(
+  '/templates/:templateId/obtain',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Obtener o habilitar una plantilla de la institución',
+    description: 'Inserta un registro en User_Template o actualiza is_avaliable a true',
+    responses: {
+      200: {
+        description: 'Plantilla obtenida exitosamente'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const templateId = c.req.param('templateId');
+
+    try {
+      // 1. Check if mapping record already exists
+      const { data: existing, error: checkError } = await supabase
+        .from('User_Template')
+        .select('userID, templateID')
+        .eq('userID', userId)
+        .eq('templateID', templateId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing mapping:', checkError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error de base de datos al verificar existencia.'
+          },
+          500
+        );
+      }
+
+      if (existing) {
+        // Update record to enable it
+        const { error: updateError } = await supabase
+          .from('User_Template')
+          .update({
+            is_avaliable: true,
+            disabled_at: null
+          })
+          .eq('userID', userId)
+          .eq('templateID', templateId);
+
+        if (updateError) {
+          console.error('Error updating template mapping:', updateError);
+          return c.json(
+            {
+              type: 'database',
+              code: ErrorCodes.Server.INTERNAL_ERROR,
+              message: 'Error al habilitar la plantilla.'
+            },
+            500
+          );
+        }
+      } else {
+        // Insert new association
+        const { error: insertError } = await supabase
+          .from('User_Template')
+          .insert({
+            userID: userId,
+            templateID: templateId,
+            is_creator: false,
+            is_avaliable: true
+          });
+
+        if (insertError) {
+          console.error('Error inserting template mapping:', insertError);
+          return c.json(
+            {
+              type: 'database',
+              code: ErrorCodes.Server.INTERNAL_ERROR,
+              message: 'Error al asociar la plantilla a tu cuenta.'
+            },
+            500
+          );
+        }
+      }
+
+      return c.json({ success: true, message: 'Plantilla obtenida exitosamente.' }, 200);
+    } catch (error) {
+      console.error('Error in /templates/:templateId/obtain handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor al procesar la asociación.'
+        },
+        500
+      );
+    }
+  }
+);
