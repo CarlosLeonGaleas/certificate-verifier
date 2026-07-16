@@ -2,13 +2,13 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { sign } from 'hono/jwt';
 import { argon2Verify } from 'hash-wasm';
-import { supabase } from './supabaseClient';
-import { signatureMiddleware, jwtAuthMiddleware } from './authMiddleware';
-import { validator, ErrorResponses } from './common';
-import { ErrorCodes } from './error';
+import { supabase } from '../lib/supabaseClient';
+import { signatureMiddleware, jwtAuthMiddleware } from '../middlewares/authMiddleware';
+import { validator, ErrorResponses } from '../utils/common';
+import { ErrorCodes } from '../utils/error';
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
-import { Config, Certificate } from '../../packages/core';
+import { Config, Certificate } from '../../../packages/core';
 
 const JWT_SECRET = Config.JWT_SECRET;
 
@@ -501,4 +501,3 @@ issuer.post(
     }
   }
 );
-

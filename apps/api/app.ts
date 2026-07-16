@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
-import { certificate } from './certificate'
-import { issuer } from './issuer'
-import { template } from './template'
-import { ErrorCodes } from './error';
+import { certificate } from './routes/certificate'
+import { issuer } from './routes/issuer'
+import { template } from './routes/template'
+import { ErrorCodes } from './utils/error';
 import { openAPISpecs } from 'hono-openapi'
 import { Scalar } from '@scalar/hono-api-reference';
 import { HTTPException } from 'hono/http-exception';

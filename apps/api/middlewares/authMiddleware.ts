@@ -1,7 +1,7 @@
 import { createHmac } from 'crypto';
 import { verify } from 'hono/jwt';
 import type { MiddlewareHandler } from 'hono';
-import { Config } from '../../packages/core';
+import { Config } from '../../../packages/core';
 
 const JWT_SECRET = Config.JWT_SECRET;
 const APP_SECRET_KEY = Config.APP_SECRET_KEY;

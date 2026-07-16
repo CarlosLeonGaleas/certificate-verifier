@@ -1,10 +1,9 @@
-// import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { Certificate, Examples } from "../../packages/core"
+import { Certificate, Examples } from "../../../packages/core"
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
 import { z } from 'zod';
-import { ErrorResponses, validator } from './common';
+import { ErrorResponses, validator } from '../utils/common';
 
 function stringifyBigInts(obj: any): any {
     if (typeof obj === 'bigint') {
@@ -211,34 +210,3 @@ export const certificate = new Hono()
 
             return c.json({ data: stringifyBigInts(certificatesData) }, 200)
         })
-// .get('/migrate',
-//     describeRoute(
-//         {
-//             tags: ["Certificate"],
-//             summary: "Migrar los certificados a la blockan desde el csv",
-//             description: "Genera un json con los datos de los certificados migrados",
-//             responses: {
-//                 200: {
-//                     content: {
-//                         "application/json": {
-//                             schema: resolver(z.object({
-//                                 data: Certificate.InfoSchema.array().openapi({
-//                                     description: "Información del certificado",
-//                                     example: [Examples.Certificate]
-//                                 })
-//                             })),
-//                             example: {
-//                                 data: [Examples.Certificate]
-//                             }
-//                         }
-//                     },
-//                     description: "Información del certificado",
-//                 },
-//                 500: ErrorResponses[500],
-//             }
-//         }
-//     ),
-//     async (c) => {
-//         RunMigration2();
-//         return c.json({ data: "Revise el procesamiento de migración en la consola" }, 200)
-//     })

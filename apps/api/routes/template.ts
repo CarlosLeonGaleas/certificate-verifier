@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { supabase } from './supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import { describeRoute } from 'hono-openapi';
 import { resolver } from 'hono-openapi/zod';
 import { z } from 'zod';
-import { ErrorResponses } from './common';
-import { ErrorCodes } from './error';
+import { ErrorResponses } from '../utils/common';
+import { ErrorCodes } from '../utils/error';
 
 export const template = new Hono();
 
