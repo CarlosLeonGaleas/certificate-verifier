@@ -747,3 +747,508 @@ issuer.post(
     }
   }
 );
+
+// Disable Area for user
+issuer.put(
+  '/areas/:areaId/disable',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Deshabilitar un área para el usuario',
+    description: 'Modifica is_avaliable a false en la tabla User_Area para el usuario autenticado',
+    responses: {
+      200: {
+        description: 'Área deshabilitada exitosamente'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const areaId = c.req.param('areaId');
+
+    try {
+      const { error } = await supabase
+        .from('User_Area')
+        .update({
+          is_avaliable: false,
+          disabled_at: new Date().toISOString()
+        })
+        .eq('userID', userId)
+        .eq('areaID', areaId);
+
+      if (error) {
+        console.error('Error disabling area in Supabase:', error);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error al deshabilitar el área en la base de datos.'
+          },
+          500
+        );
+      }
+
+      return c.json({ success: true, message: 'Área deshabilitada exitosamente' }, 200);
+    } catch (error) {
+      console.error('Error in /areas/:areaId/disable handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor.'
+        },
+        500
+      );
+    }
+  }
+);
+
+// Get available areas from user's institution (that the user does not have active)
+issuer.get(
+  '/areas/institution',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Obtener las áreas de la institución que el usuario no tiene activas',
+    description: 'Filtra las áreas por el institutionID del usuario y descarta las activas',
+    responses: {
+      200: {
+        description: 'Lista de áreas de la institución disponibles'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const institutionId = user.institutionId;
+
+    try {
+      // 1. Fetch areas belonging to the user's institution
+      const { data: instAreas, error: areasError } = await supabase
+        .from('Area')
+        .select('areaID, institutionID, area_code, area_name, created_at')
+        .eq('institutionID', institutionId);
+
+      if (areasError) {
+        console.error('Error fetching institution areas:', areasError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error al obtener las áreas de la institución.'
+          },
+          500
+        );
+      }
+
+      // 2. Fetch all mappings for this user in User_Area
+      const { data: userAreas, error: mappingsError } = await supabase
+        .from('User_Area')
+        .select('areaID, is_avaliable')
+        .eq('userID', userId);
+
+      if (mappingsError) {
+        console.error('Error fetching user area mappings:', mappingsError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error al obtener mapeos de áreas de usuario.'
+          },
+          500
+        );
+      }
+
+      // Create lookup map
+      const userAreaMap = new Map<string, boolean>(
+        (userAreas || []).map((ua: any) => [ua.areaID, ua.is_avaliable])
+      );
+
+      // Filter areas: show if user doesn't have it or has it but disabled
+      const result = (instAreas || [])
+        .filter((a: any) => {
+          const isAvailable = userAreaMap.get(a.areaID);
+          return isAvailable === undefined || isAvailable === false;
+        })
+        .map((a: any) => {
+          const hasRecord = userAreaMap.has(a.areaID);
+          return {
+            areaID: a.areaID,
+            institutionID: a.institutionID,
+            area_code: a.area_code,
+            area_name: a.area_name,
+            created_at: a.created_at,
+            hasRecord
+          };
+        });
+
+      return c.json(result, 200);
+    } catch (error) {
+      console.error('Error in /areas/institution handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor al procesar la consulta.'
+        },
+        500
+      );
+    }
+  }
+);
+
+// Obtain or enable an area for the user
+issuer.post(
+  '/areas/:areaId/obtain',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Obtener o habilitar un área de la institución',
+    description: 'Inserta un registro en User_Area o actualiza is_avaliable a true',
+    responses: {
+      200: {
+        description: 'Área obtenida exitosamente'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const areaId = c.req.param('areaId');
+
+    try {
+      // 1. Check if mapping record already exists
+      const { data: existing, error: checkError } = await supabase
+        .from('User_Area')
+        .select('userID, areaID')
+        .eq('userID', userId)
+        .eq('areaID', areaId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing mapping:', checkError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error de base de datos al verificar existencia.'
+          },
+          500
+        );
+      }
+
+      if (existing) {
+        // Update record to enable it
+        const { error: updateError } = await supabase
+          .from('User_Area')
+          .update({
+            is_avaliable: true,
+            disabled_at: null
+          })
+          .eq('userID', userId)
+          .eq('areaID', areaId);
+
+        if (updateError) {
+          console.error('Error updating area mapping:', updateError);
+          return c.json(
+            {
+              type: 'database',
+              code: ErrorCodes.Server.INTERNAL_ERROR,
+              message: 'Error al habilitar el área.'
+            },
+            500
+          );
+        }
+      } else {
+        // Insert new association
+        const { error: insertError } = await supabase
+          .from('User_Area')
+          .insert({
+            userID: userId,
+            areaID: areaId,
+            is_creator: false,
+            is_avaliable: true
+          });
+
+        if (insertError) {
+          console.error('Error inserting area mapping:', insertError);
+          return c.json(
+            {
+              type: 'database',
+              code: ErrorCodes.Server.INTERNAL_ERROR,
+              message: 'Error al asociar el área a tu cuenta.'
+            },
+            500
+          );
+        }
+      }
+
+      return c.json({ success: true, message: 'Área obtenida exitosamente.' }, 200);
+    } catch (error) {
+      console.error('Error in /areas/:areaId/obtain handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor al procesar la asociación.'
+        },
+        500
+      );
+    }
+  }
+);
+
+// Disable Event for user
+issuer.put(
+  '/events/:eventId/disable',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Deshabilitar un evento/curso para el usuario',
+    description: 'Modifica is_avaliable a false en la tabla User_Event para el usuario autenticado',
+    responses: {
+      200: {
+        description: 'Evento deshabilitado exitosamente'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const eventId = c.req.param('eventId');
+
+    try {
+      const { error } = await supabase
+        .from('User_Event')
+        .update({
+          is_avaliable: false,
+          disabled_at: new Date().toISOString()
+        })
+        .eq('userID', userId)
+        .eq('eventID', eventId);
+
+      if (error) {
+        console.error('Error disabling event in Supabase:', error);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error al deshabilitar el evento en la base de datos.'
+          },
+          500
+        );
+      }
+
+      return c.json({ success: true, message: 'Evento deshabilitado exitosamente' }, 200);
+    } catch (error) {
+      console.error('Error in /events/:eventId/disable handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor.'
+        },
+        500
+      );
+    }
+  }
+);
+
+// Get available events from user's institution (that the user does not have active)
+issuer.get(
+  '/events/institution',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Obtener los eventos de la institución que el usuario no tiene activos',
+    description: 'Filtra los eventos por el institutionID del usuario y descarta los activos',
+    responses: {
+      200: {
+        description: 'Lista de eventos de la institución disponibles'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const institutionId = user.institutionId;
+
+    try {
+      // 1. Fetch events belonging to the user's institution
+      const { data: instEvents, error: eventsError } = await supabase
+        .from('Event')
+        .select('eventID, event_code, event_name, created_at, institutionID, templateID, details')
+        .eq('institutionID', institutionId);
+
+      if (eventsError) {
+        console.error('Error fetching institution events:', eventsError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error al obtener los eventos de la institución.'
+          },
+          500
+        );
+      }
+
+      // 2. Fetch all mappings for this user in User_Event
+      const { data: userEvents, error: mappingsError } = await supabase
+        .from('User_Event')
+        .select('eventID, is_avaliable')
+        .eq('userID', userId);
+
+      if (mappingsError) {
+        console.error('Error fetching user event mappings:', mappingsError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error al obtener mapeos de eventos de usuario.'
+          },
+          500
+        );
+      }
+
+      // Create lookup map
+      const userEventMap = new Map<string, boolean>(
+        (userEvents || []).map((ue: any) => [ue.eventID, ue.is_avaliable])
+      );
+
+      // Filter events: show if user doesn't have it or has it but disabled
+      const result = (instEvents || [])
+        .filter((e: any) => {
+          const isAvailable = userEventMap.get(e.eventID);
+          return isAvailable === undefined || isAvailable === false;
+        })
+        .map((e: any) => {
+          const hasRecord = userEventMap.has(e.eventID);
+          return {
+            eventID: e.eventID,
+            event_code: e.event_code,
+            event_name: e.event_name,
+            created_at: e.created_at,
+            institutionID: e.institutionID,
+            templateID: e.templateID,
+            details: e.details,
+            hasRecord
+          };
+        });
+
+      return c.json(result, 200);
+    } catch (error) {
+      console.error('Error in /events/institution handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor al procesar la consulta.'
+        },
+        500
+      );
+    }
+  }
+);
+
+// Obtain or enable an event for the user
+issuer.post(
+  '/events/:eventId/obtain',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Obtener o habilitar un evento de la institución',
+    description: 'Inserta un registro en User_Event o actualiza is_avaliable a true',
+    responses: {
+      200: {
+        description: 'Evento obtenido exitosamente'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const eventId = c.req.param('eventId');
+
+    try {
+      // 1. Check if mapping record already exists
+      const { data: existing, error: checkError } = await supabase
+        .from('User_Event')
+        .select('userID, eventID')
+        .eq('userID', userId)
+        .eq('eventID', eventId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing mapping:', checkError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error de base de datos al verificar existencia.'
+          },
+          500
+        );
+      }
+
+      if (existing) {
+        // Update record to enable it
+        const { error: updateError } = await supabase
+          .from('User_Event')
+          .update({
+            is_avaliable: true,
+            disabled_at: null
+          })
+          .eq('userID', userId)
+          .eq('eventID', eventId);
+
+        if (updateError) {
+          console.error('Error updating event mapping:', updateError);
+          return c.json(
+            {
+              type: 'database',
+              code: ErrorCodes.Server.INTERNAL_ERROR,
+              message: 'Error al habilitar el evento.'
+            },
+            500
+          );
+        }
+      } else {
+        // Insert new association
+        const { error: insertError } = await supabase
+          .from('User_Event')
+          .insert({
+            userID: userId,
+            eventID: eventId,
+            is_creator: false,
+            is_avaliable: true
+          });
+
+        if (insertError) {
+          console.error('Error inserting event mapping:', insertError);
+          return c.json(
+            {
+              type: 'database',
+              code: ErrorCodes.Server.INTERNAL_ERROR,
+              message: 'Error al asociar el evento a tu cuenta.'
+            },
+            500
+          );
+        }
+      }
+
+      return c.json({ success: true, message: 'Evento obtenido exitosamente.' }, 200);
+    } catch (error) {
+      console.error('Error in /events/:eventId/obtain handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor al procesar la asociación.'
+        },
+        500
+      );
+    }
+  }
+);
+
