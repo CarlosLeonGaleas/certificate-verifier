@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { sign } from 'hono/jwt';
-import { argon2Verify } from 'hash-wasm';
+import { argon2Verify, argon2id } from 'hash-wasm';
+import crypto from 'crypto';
 import { supabase } from '../lib/supabaseClient';
 import { signatureMiddleware, jwtAuthMiddleware } from '../middlewares/authMiddleware';
 import { validator, ErrorResponses } from '../utils/common';
@@ -15,6 +16,11 @@ const JWT_SECRET = Config.JWT_SECRET;
 const loginSchema = z.object({
   username: z.string().openapi({ description: 'El nombre de usuario' }),
   password: z.string().openapi({ description: 'La contraseña del usuario' })
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().openapi({ description: 'La contraseña actual' }),
+  newPassword: z.string().openapi({ description: 'La nueva contraseña' })
 });
 
 export const issuer = new Hono<{ Variables: { user: any } }>();
@@ -137,6 +143,117 @@ issuer.post(
           type: 'internal',
           code: ErrorCodes.Server.INTERNAL_ERROR,
           message: `Error interno en el servidor: ${error instanceof Error ? error.message : String(error)}`
+        },
+        500
+      );
+    }
+  }
+);
+
+// Change password endpoint
+issuer.put(
+  '/auth/change-password',
+  describeRoute({
+    tags: ['Issuer Auth'],
+    summary: 'Cambiar contraseña de emisor',
+    description: 'Valida la contraseña actual y actualiza a la nueva contraseña en Supabase',
+    responses: {
+      200: {
+        description: 'Contraseña cambiada exitosamente',
+        content: {
+          'application/json': {
+            schema: resolver(z.object({ success: z.boolean(), message: z.string() }))
+          }
+        }
+      },
+      400: ErrorResponses[400],
+      401: ErrorResponses[401],
+      500: ErrorResponses[500]
+    }
+  }),
+  validator('json', changePasswordSchema),
+  async (c) => {
+    const { currentPassword, newPassword } = c.req.valid('json');
+    const userContext = c.get('user');
+    const userId = userContext.userId;
+
+    try {
+      // 1. Get current user's password_hash from Supabase
+      const { data: user, error } = await supabase
+        .from('User')
+        .select('password_hash')
+        .eq('userID', userId)
+        .single();
+
+      if (error || !user) {
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Authentication.INVALID_CREDENTIALS,
+            message: 'Usuario no encontrado.'
+          },
+          404
+        );
+      }
+
+      // 2. Verify current password
+      const isPasswordValid = await argon2Verify({
+        password: currentPassword,
+        hash: user.password_hash
+      });
+
+      if (!isPasswordValid) {
+        return c.json(
+          {
+            type: 'authentication',
+            code: ErrorCodes.Authentication.INVALID_CREDENTIALS,
+            message: 'La contraseña actual es incorrecta.'
+          },
+          401
+        );
+      }
+
+      // 3. Generate Argon2id hash for the new password
+      const salt = crypto.randomBytes(16);
+      const newPasswordHash = await argon2id({
+        password: newPassword,
+        salt: salt,
+        parallelism: 1,
+        iterations: 2,
+        memorySize: 16384,
+        hashLength: 32,
+        outputType: 'encoded'
+      });
+
+      // 4. Update user's password_hash and updated_at timestamp in Supabase
+      const { error: updateError } = await supabase
+        .from('User')
+        .update({
+          password_hash: newPasswordHash,
+          updated_at: new Date().toISOString()
+        })
+        .eq('userID', userId);
+
+      if (updateError) {
+        console.error('Error updating password in Supabase:', updateError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Error de base de datos al cambiar la contraseña.'
+          },
+          500
+        );
+      }
+
+      return c.json({ success: true, message: 'Contraseña cambiada exitosamente.' }, 200);
+    } catch (error) {
+      console.error('Error changing password:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: `Error interno del servidor: ${error instanceof Error ? error.message : String(error)}`
         },
         500
       );

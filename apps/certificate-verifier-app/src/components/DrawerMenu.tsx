@@ -1,5 +1,5 @@
 import { styled } from '@mui/material/styles';
-import type { CSSObject, Theme } from '@mui/system';
+import type { CSSObject, Theme } from '@mui/material/styles';
 
 import { List, Box, Divider, Drawer as MuiDrawer } from '@mui/material';
 import type { DrawerProps as MuiDrawerProps } from '@mui/material/Drawer';
