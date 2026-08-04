@@ -23,6 +23,31 @@ const changePasswordSchema = z.object({
   newPassword: z.string().openapi({ description: 'La nueva contraseña' })
 });
 
+const createAreaSchema = z.object({
+  area_code: z
+    .string()
+    .min(1, 'El código del área es obligatorio')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'El código no permite espacios ni caracteres especiales')
+    .openapi({ description: 'Código único de área' }),
+  area_name: z
+    .string()
+    .min(1, 'El nombre del área es obligatorio')
+    .openapi({ description: 'Nombre descriptivo del área' })
+});
+
+const createEventSchema = z.object({
+  event_code: z
+    .string()
+    .min(1, 'El código del evento es obligatorio')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'El código no permite espacios ni caracteres especiales')
+    .openapi({ description: 'Código único de evento' }),
+  event_name: z
+    .string()
+    .min(1, 'El nombre del evento es obligatorio')
+    .openapi({ description: 'Nombre del evento o curso' }),
+  details: z.string().optional().openapi({ description: 'Detalles u observaciones opcionales' })
+});
+
 export const issuer = new Hono<{ Variables: { user: any } }>();
 
 // Apply application signature check to all endpoints under /api/issuer/*
@@ -1362,6 +1387,188 @@ issuer.post(
           type: 'internal',
           code: ErrorCodes.Server.INTERNAL_ERROR,
           message: 'Error interno del servidor al procesar la asociación.'
+        },
+        500
+      );
+    }
+  }
+);
+
+// Create new Area for institution and associate to creator user
+issuer.post(
+  '/areas',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Crear una nueva área y vincularla al emisor',
+    description: 'Crea el área en la tabla Area y su relación activa en User_Area',
+    responses: {
+      201: {
+        description: 'Área creada y asociada exitosamente'
+      },
+      400: ErrorResponses[400],
+      500: ErrorResponses[500]
+    }
+  }),
+  validator('json', createAreaSchema),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const institutionId = user.institutionId;
+    const { area_code, area_name } = c.req.valid('json');
+
+    try {
+      // 1. Insert new Area into Supabase
+      const { data: newArea, error: areaError } = await supabase
+        .from('Area')
+        .insert({
+          institutionID: institutionId,
+          area_code,
+          area_name
+        })
+        .select()
+        .single();
+
+      if (areaError || !newArea) {
+        console.error('Error inserting Area in Supabase:', areaError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: areaError?.message || 'Error al crear el área en la base de datos.'
+          },
+          400
+        );
+      }
+
+      // 2. Insert relation into User_Area
+      const { error: mappingError } = await supabase
+        .from('User_Area')
+        .insert({
+          userID: userId,
+          areaID: newArea.areaID,
+          is_creator: true,
+          is_avaliable: true
+        });
+
+      if (mappingError) {
+        console.error('Error inserting User_Area mapping in Supabase:', mappingError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Área creada, pero ocurrió un error al vincularla con su usuario emisor.'
+          },
+          500
+        );
+      }
+
+      return c.json(
+        {
+          success: true,
+          message: 'Área creada y asociada con éxito.',
+          data: newArea
+        },
+        201
+      );
+    } catch (error) {
+      console.error('Error in POST /areas handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor al crear el área.'
+        },
+        500
+      );
+    }
+  }
+);
+
+// Create new Event for institution and associate to creator user
+issuer.post(
+  '/events',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Crear un nuevo evento/curso y vincularlo al emisor',
+    description: 'Crea el evento en la tabla Event y su relación activa en User_Event',
+    responses: {
+      201: {
+        description: 'Evento creado y asociado exitosamente'
+      },
+      400: ErrorResponses[400],
+      500: ErrorResponses[500]
+    }
+  }),
+  validator('json', createEventSchema),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const institutionId = user.institutionId;
+    const { event_code, event_name, details } = c.req.valid('json');
+
+    try {
+      // 1. Insert new Event into Supabase
+      const { data: newEvent, error: eventError } = await supabase
+        .from('Event')
+        .insert({
+          institutionID: institutionId,
+          event_code,
+          event_name,
+          details: details || null,
+          templateID: null
+        })
+        .select()
+        .single();
+
+      if (eventError || !newEvent) {
+        console.error('Error inserting Event in Supabase:', eventError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: eventError?.message || 'Error al crear el evento en la base de datos.'
+          },
+          400
+        );
+      }
+
+      // 2. Insert relation into User_Event
+      const { error: mappingError } = await supabase
+        .from('User_Event')
+        .insert({
+          userID: userId,
+          eventID: newEvent.eventID,
+          is_creator: true,
+          is_avaliable: true
+        });
+
+      if (mappingError) {
+        console.error('Error inserting User_Event mapping in Supabase:', mappingError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Evento creado, pero ocurrió un error al vincularlo con su usuario emisor.'
+          },
+          500
+        );
+      }
+
+      return c.json(
+        {
+          success: true,
+          message: 'Evento creado y asociado con éxito.',
+          data: newEvent
+        },
+        201
+      );
+    } catch (error) {
+      console.error('Error in POST /events handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor al crear el evento.'
         },
         500
       );
