@@ -126,6 +126,16 @@ export namespace Certificate {
             "name": "CertificateIssued",
             "type": "event"
         },
+        {
+            "anonymous": false,
+            "inputs": [
+                { "indexed": true, "internalType": "address", "name": "from", "type": "address" },
+                { "indexed": true, "internalType": "address", "name": "to", "type": "address" },
+                { "indexed": true, "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+            ],
+            "name": "Transfer",
+            "type": "event"
+        },
         // Function to get all certificate metadata
         {
             "inputs": [{ "internalType": "uint256", "name": "_tokenId", "type": "uint256" }],
@@ -797,17 +807,39 @@ export namespace Certificate {
                     throw new Error("Transaction wait returned no receipt.");
                 }
 
-                // Extract token ID from logs
+                // Extract token ID from logs by parsing all receipt logs for CertificateIssued event
                 let tokenId = "";
                 if (receipt.logs && receipt.logs.length > 0) {
-                    try {
-                        const parsedLog = this.contract.interface.parseLog(receipt.logs[0]);
-                        if (parsedLog && parsedLog.args && parsedLog.args.tokenId) {
-                            tokenId = parsedLog.args.tokenId.toString();
+                    for (const log of receipt.logs) {
+                        try {
+                            const parsedLog = this.contract.interface.parseLog(log);
+                            if (parsedLog && parsedLog.args && parsedLog.args.tokenId !== undefined) {
+                                tokenId = parsedLog.args.tokenId.toString();
+                                if (parsedLog.name === "CertificateIssued") {
+                                    break; // CertificateIssued event is authoritative
+                                }
+                            }
+                        } catch (e) {
+                            // Log is not part of contract interface, continue checking
                         }
-                    } catch (e) {
-                        if (receipt.logs[0].topics && receipt.logs[0].topics.length > 1) {
-                            tokenId = BigInt(receipt.logs[0].topics[1]).toString();
+                    }
+
+                    // Fallback if parseLog didn't find tokenId
+                    if (!tokenId) {
+                        for (const log of receipt.logs) {
+                            if (log.topics && log.topics.length >= 2) {
+                                // If 4 topics, check if topic 1 is non-zero (CertificateIssued: tokenId is topic 1)
+                                const topic1Val = BigInt(log.topics[1]);
+                                if (log.topics.length === 4 && topic1Val === 0n) {
+                                    // Standard ERC721 Transfer(from=0x0, to, tokenId) -> tokenId is topic 3
+                                    tokenId = BigInt(log.topics[3]).toString();
+                                    break;
+                                } else {
+                                    // CertificateIssued(tokenId, studentHash, institutionHash) -> tokenId is topic 1
+                                    tokenId = topic1Val.toString();
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
