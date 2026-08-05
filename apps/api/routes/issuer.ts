@@ -1447,7 +1447,8 @@ issuer.post(
           userID: userId,
           areaID: newArea.areaID,
           is_creator: true,
-          is_avaliable: true
+          is_avaliable: true,
+          created_at: new Date().toISOString()
         });
 
       if (mappingError) {
@@ -1539,7 +1540,8 @@ issuer.post(
           userID: userId,
           eventID: newEvent.eventID,
           is_creator: true,
-          is_avaliable: true
+          is_avaliable: true,
+          created_at: new Date().toISOString()
         });
 
       if (mappingError) {
@@ -1569,6 +1571,140 @@ issuer.post(
           type: 'internal',
           code: ErrorCodes.Server.INTERNAL_ERROR,
           message: 'Error interno del servidor al crear el evento.'
+        },
+        500
+      );
+    }
+  }
+);
+
+// Create new Template for institution and associate to creator user
+const createTemplateSchema = z.object({
+  template_name: z.string().min(1, 'El nombre de la plantilla es obligatorio'),
+  template_details: z.string().optional(),
+  template_html: z.string().min(1, 'El código HTML de la plantilla es obligatorio')
+});
+
+issuer.post(
+  '/templates',
+  describeRoute({
+    tags: ['Issuer Operations'],
+    summary: 'Crear una nueva plantilla de certificado y vincularla al emisor',
+    description: 'Genera el template_code automático (BACKGROUND0XX), inserta en Template y User_Template',
+    responses: {
+      201: {
+        description: 'Plantilla creada y asociada exitosamente'
+      },
+      400: ErrorResponses[400],
+      500: ErrorResponses[500]
+    }
+  }),
+  validator('json', createTemplateSchema),
+  async (c) => {
+    const user = c.get('user');
+    const userId = user.userId;
+    const institutionId = user.institutionId;
+    const { template_name, template_details, template_html } = c.req.valid('json');
+
+    try {
+      // 1. Determine next template_code (BACKGROUND0XX)
+      const { count, error: countError } = await supabase
+        .from('Template')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('Error counting templates:', countError);
+      }
+
+      let candidateNum = (count || 0) + 4;
+      let templateCode = `BACKGROUND${String(candidateNum).padStart(3, '0')}`;
+
+      // Guarantee code uniqueness in case candidateNum is taken
+      let isUnique = false;
+      let attempts = 0;
+      while (!isUnique && attempts < 100) {
+        const { data: existing } = await supabase
+          .from('Template')
+          .select('templateID')
+          .eq('template_code', templateCode)
+          .maybeSingle();
+
+        if (!existing) {
+          isUnique = true;
+        } else {
+          candidateNum += 1;
+          templateCode = `BACKGROUND${String(candidateNum).padStart(3, '0')}`;
+          attempts += 1;
+        }
+      }
+
+      const nowIso = new Date().toISOString();
+
+      // 2. Insert new Template into Supabase
+      const { data: newTemplate, error: templateError } = await supabase
+        .from('Template')
+        .insert({
+          institutionID: institutionId,
+          template_code: templateCode,
+          template_name,
+          template_details: template_details || null,
+          template_html,
+          created_at: nowIso,
+          updated_at: nowIso
+        })
+        .select()
+        .single();
+
+      if (templateError || !newTemplate) {
+        console.error('Error inserting Template in Supabase:', templateError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: templateError?.message || 'Error al crear la plantilla en la base de datos.'
+          },
+          400
+        );
+      }
+
+      // 3. Insert relation into User_Template
+      const { error: mappingError } = await supabase
+        .from('User_Template')
+        .insert({
+          userID: userId,
+          templateID: newTemplate.templateID,
+          is_creator: true,
+          is_avaliable: true,
+          created_at: nowIso
+        });
+
+      if (mappingError) {
+        console.error('Error inserting User_Template mapping in Supabase:', mappingError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'Plantilla creada, pero ocurrió un error al vincularla con su usuario emisor.'
+          },
+          500
+        );
+      }
+
+      return c.json(
+        {
+          success: true,
+          message: 'Plantilla creada y asociada con éxito.',
+          data: newTemplate
+        },
+        201
+      );
+    } catch (error) {
+      console.error('Error in POST /templates handler:', error);
+      return c.json(
+        {
+          type: 'internal',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: 'Error interno del servidor al crear la plantilla.'
         },
         500
       );
