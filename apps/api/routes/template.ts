@@ -174,18 +174,34 @@ template.get(
           shouldReplaceBackground = true;
           break;
         default:
-          dbTemplateCode = 'BACKGROUND005';
+          dbTemplateCode = backgroundCode;
           break;
       }
 
       console.log(`[API TEMPLATE] Querying database for template code: ${dbTemplateCode} (Requested: ${backgroundCode})`);
 
       // Fetch the template HTML from Supabase
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('Template')
         .select('template_html')
         .eq('template_code', dbTemplateCode)
         .single();
+
+      // If template is not found for requested code and dbTemplateCode is not already BACKGROUND005, fall back to BACKGROUND005
+      if ((error || !data || !data.template_html) && dbTemplateCode !== 'BACKGROUND005') {
+        console.warn(`[API TEMPLATE] Template '${dbTemplateCode}' not found in database. Falling back to BACKGROUND005.`);
+        const fallbackResult = await supabase
+          .from('Template')
+          .select('template_html')
+          .eq('template_code', 'BACKGROUND005')
+          .single();
+
+        if (fallbackResult.data && fallbackResult.data.template_html) {
+          data = fallbackResult.data;
+          error = null;
+          shouldReplaceBackground = true;
+        }
+      }
 
       if (error || !data || !data.template_html) {
         console.warn(`[API TEMPLATE] Template not found in database for code: ${dbTemplateCode}`);
