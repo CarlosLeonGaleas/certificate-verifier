@@ -18,7 +18,7 @@ const getHeaders = () => {
 
 interface GetCertificatesResult {
     success: boolean;
-    data: any[][] | null;
+    data: any[] | null;
     errorType?: 'network';
 }
 
@@ -41,7 +41,7 @@ const getCertificates = async (documentId: string = ''): Promise<GetCertificates
             return { success: false, data: null, errorType: 'network' };
         }
 
-        const datos: { data: any[][] } = await response.json();
+        const datos: { data: any[] } = await response.json();
         return { success: true, data: datos.data };
     } catch (error) {
         console.error("Error al verificar el certificado:", error);
@@ -92,7 +92,7 @@ const DocumentIdPage: React.FC = () => {
     const { documentId: routeId } = useParams<{ documentId?: string }>();
     const [documentId, setDocumentId] = useState<string | ''>("");
     const [certificateFound, setCertificateFound] = useState<boolean>(true);
-    const [certificateData, setCertificateData] = useState<any[][] | null>(null);
+    const [certificateData, setCertificateData] = useState<any[] | null>(null);
     const [isSearching, setIsSearching] = useState<boolean>(false);
     const [showResults, setShowResults] = useState<boolean>(false);
     const [loaderActive, setLoaderActive] = useState(false);
@@ -203,23 +203,37 @@ const DocumentIdPage: React.FC = () => {
                         width: '100%'
                     }}>
                         {certificateData && certificateData.length > 0 ? (
-                            certificateData.map((cert, index) => (
-                                <CertificateFound
-                                    key={index}
-                                    tokenId={cert[0]}
-                                    name={cert[1]}
-                                    documentId={cert[2]}
-                                    course={cert[3]}
-                                    description={cert[4]}
-                                    institution={cert[5]}
-                                    area={cert[6]}
-                                    issuedDate={cert[7]}
-                                    startDate={cert[8]}
-                                    endDate={cert[9]}
-                                    hoursWorked={cert[10].toString()}
-                                    signatoryName={cert[11]}
-                                />
-                            ))
+                            certificateData.map((cert: any, index: number) => {
+                                const isArray = Array.isArray(cert);
+                                const certProps = isArray ? {
+                                    tokenId: cert[0]?.toString?.() ?? '',
+                                    name: cert[1],
+                                    documentId: cert[2],
+                                    course: cert[3],
+                                    description: cert[4],
+                                    institution: cert[5],
+                                    area: cert[6],
+                                    issuedDate: cert[7],
+                                    startDate: cert[8],
+                                    endDate: cert[9],
+                                    hoursWorked: cert[10]?.toString?.() ?? '',
+                                    signatoryName: cert[11],
+                                    hash: '',
+                                    issueAt: '',
+                                } : {
+                                    ...cert,
+                                    hoursWorked: cert.hoursWorked?.toString?.() ?? '',
+                                    hash: cert.hash || '',
+                                    issueAt: cert.issueAt || '',
+                                };
+
+                                return (
+                                    <CertificateFound
+                                        key={certProps.tokenId || index}
+                                        {...certProps}
+                                    />
+                                );
+                            })
                         ) : (
                             <CertificateNotFound 
                                 type={errorType || 'not_found'} 

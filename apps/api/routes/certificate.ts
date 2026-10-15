@@ -102,7 +102,7 @@ export const certificate = new Hono()
             const retriever = new Certificate.CertificateRetriever();
 
             try {
-                const certificateData = await retriever.getCertificateData(tokenId);
+                const certificateData = await retriever.getCompleteCertificateFromTokenId(tokenId);
 
                 if (!certificateData) {
                     return c.json({
@@ -181,9 +181,9 @@ export const certificate = new Hono()
                     content: {
                         "application/json": {
                             schema: resolver(z.object({
-                                data: Certificate.InfoSchema
+                                data: Certificate.InfoSchema.array()
                             })),
-                            example: { data: Examples.Certificate },
+                            example: { data: [Examples.Certificate] },
                         },
                     },
                 },
@@ -197,16 +197,24 @@ export const certificate = new Hono()
             const documentId = c.req.valid("param").documentId;
             const retriever = new Certificate.CertificateRetriever();
 
-            const certificatesData = await retriever.getCertificateDataFromDocumentId(documentId);
-            console.log("certificatesData:", certificatesData);
+            try {
+                const certificatesData = await retriever.getCertificatesWithHashFromDocumentId(documentId);
 
-            if (!certificatesData) {
+                if (!certificatesData || certificatesData.length === 0) {
+                    return c.json({
+                        type: "not_found",
+                        code: "certificate_not_found",
+                        message: "The requested certificate could not be found",
+                    }, 404);
+                }
+
+                return c.json({ data: certificatesData }, 200);
+            } catch (error) {
+                console.error(`Error retrieving certificates by document ID ${documentId}:`, error);
                 return c.json({
                     type: "not_found",
                     code: "certificate_not_found",
                     message: "The requested certificate could not be found",
                 }, 404);
             }
-
-            return c.json({ data: stringifyBigInts(certificatesData) }, 200)
         })

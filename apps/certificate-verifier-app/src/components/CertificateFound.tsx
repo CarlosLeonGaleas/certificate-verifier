@@ -470,12 +470,16 @@ const CertificateFound: React.FC<Certificate.InfoType> = ({
             <Box mb={{ xs: 2, sm: 3 }}>
               <InfoItem icon={Id} label="Token ID" value={tokenId} />
             </Box>
-            <Box mb={{ xs: 2, sm: 3 }}>
-              <InfoItem icon={Hash} label="Hash de la Transacción" value={hash} />
-            </Box>
-            <Box mb={{ xs: 2, sm: 3 }}>
-              <InfoItem icon={CalendarToday} label="Fecha y Hora de Registro en la Blockchain" value={issueAt} />
-            </Box>
+            {hash && (
+              <Box mb={{ xs: 2, sm: 3 }}>
+                <InfoItem icon={Hash} label="Hash de la Transacción" value={hash} />
+              </Box>
+            )}
+            {issueAt && (
+              <Box mb={{ xs: 2, sm: 3 }}>
+                <InfoItem icon={CalendarToday} label="Fecha y Hora de Registro en la Blockchain" value={issueAt} />
+              </Box>
+            )}
           </Box>
 
           {/* Botón de Descarga */}

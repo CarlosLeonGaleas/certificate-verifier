@@ -89,6 +89,12 @@ export namespace Certificate {
     type CertificateMetadata = CertificateTypes.CertificateMetadata;
     type TransactionInfo = CertificateTypes.TransactionInfo;
 
+    export interface TxLogData {
+        hash: string;
+        blockNumber: number;
+        issueAt: string;
+    }
+
     interface TokenIdResult {
         tokenId: string;
         basicInfo: BasicCertificateInfo;
@@ -237,10 +243,171 @@ export namespace Certificate {
     export class CertificateRetriever {
         private provider: ethers.JsonRpcProvider;
         private contract: ethers.Contract;
+        private static txCache = new Map<string, TxLogData>();
+        private static blockCache = new Map<number, string>();
+        private static readonly CONTRACT_DEPLOYMENT_BLOCK = 72650500;
+        private static readonly TOPIC_CERTIFICATE_ISSUED = "0xabe6adb4ebd55135fa2828c9921bb77d0a2f046d5979045c2d538fec67dfa95c";
 
         constructor() {
             this.provider = new ethers.JsonRpcProvider(Config.API_NETWORK_URL);
             this.contract = new ethers.Contract(Config.CONTRACT_ADDRESS, CONTRACT_ABI, this.provider);
+        }
+
+        /**
+         * Resolves transaction logs and block timestamps for multiple token IDs in batch.
+         * Uses topic1 OR-filtering in a single eth_getLogs call to stay well within RPC limits.
+         */
+        async batchResolveTxLogs(tokenIds: (string | number)[]): Promise<void> {
+            const uncachedIds = tokenIds
+                .map(id => id.toString())
+                .filter(id => !CertificateRetriever.txCache.has(id));
+
+            if (uncachedIds.length === 0) return;
+
+            const CHUNK_SIZE = 30;
+            for (let i = 0; i < uncachedIds.length; i += CHUNK_SIZE) {
+                const chunk = uncachedIds.slice(i, i + CHUNK_SIZE);
+                const topic1Array = chunk.map(id => ethers.zeroPadValue(ethers.toBeHex(BigInt(id)), 32));
+
+                try {
+                    const logs = await this.provider.getLogs({
+                        address: Config.CONTRACT_ADDRESS,
+                        topics: [CertificateRetriever.TOPIC_CERTIFICATE_ISSUED, topic1Array],
+                        fromBlock: CertificateRetriever.CONTRACT_DEPLOYMENT_BLOCK,
+                        toBlock: "latest"
+                    });
+
+                    const neededBlocks: number[] = [];
+                    for (const log of logs) {
+                        if (!CertificateRetriever.blockCache.has(log.blockNumber) && !neededBlocks.includes(log.blockNumber)) {
+                            neededBlocks.push(log.blockNumber);
+                        }
+                    }
+
+                    if (neededBlocks.length > 0) {
+                        await Promise.all(
+                            neededBlocks.map(async (bNum) => {
+                                try {
+                                    const b = await this.provider.getBlock(bNum);
+                                    if (b && b.timestamp) {
+                                        CertificateRetriever.blockCache.set(bNum, new Date(b.timestamp * 1000).toLocaleString());
+                                    }
+                                } catch (bErr) {
+                                    console.warn(`Could not fetch block timestamp for ${bNum}:`, (bErr as Error).message);
+                                }
+                            })
+                        );
+                    }
+
+                    for (const log of logs) {
+                        const tId = BigInt(log.topics[1]).toString();
+                        const issueAt = CertificateRetriever.blockCache.get(log.blockNumber) || "";
+                        CertificateRetriever.txCache.set(tId, {
+                            hash: log.transactionHash,
+                            blockNumber: log.blockNumber,
+                            issueAt: issueAt
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Error in batchResolveTxLogs:`, (error as Error).message);
+                }
+            }
+        }
+
+        /**
+         * Resolves the transaction hash and block timestamp from Ankr RPC logs using topic filters.
+         * Results are cached in memory to avoid repeated RPC queries.
+         */
+        async getTxLogByTokenId(tokenId: string | number): Promise<TxLogData | null> {
+            const tokenIdStr = tokenId.toString();
+            if (CertificateRetriever.txCache.has(tokenIdStr)) {
+                return CertificateRetriever.txCache.get(tokenIdStr)!;
+            }
+
+            await this.batchResolveTxLogs([tokenIdStr]);
+            return CertificateRetriever.txCache.get(tokenIdStr) || null;
+        }
+
+        /**
+         * Retrieves complete certificate metadata and transaction hash/issueAt for a given Token ID.
+         */
+        async getCompleteCertificateFromTokenId(tokenId: string | number): Promise<InfoType> {
+            try {
+                const tokenIdStr = tokenId.toString();
+                // 1. Get metadata from contract first (validates existence and reverts if not found)
+                const metadata = await this.getCertificateData(tokenIdStr);
+
+                // 2. Resolve transaction log (cached or via Ankr RPC)
+                const txLog = await this.getTxLogByTokenId(tokenIdStr);
+
+                const result: InfoType = {
+                    tokenId: metadata.tokenId,
+                    name: metadata.name,
+                    documentId: metadata.documentId,
+                    course: metadata.course,
+                    description: metadata.description,
+                    institution: metadata.institution,
+                    area: metadata.area,
+                    issuedDate: metadata.issuedDate,
+                    startDate: metadata.startDate,
+                    endDate: metadata.endDate,
+                    hoursWorked: parseInt(metadata.hoursWorked) || 0,
+                    signatoryName: metadata.signatoryName,
+                    hash: txLog?.hash || "",
+                    issueAt: txLog?.issueAt || ""
+                };
+
+                return result;
+            } catch (error) {
+                console.error(`Error in getCompleteCertificateFromTokenId for tokenId ${tokenId}:`, (error as Error).message);
+                throw error;
+            }
+        }
+
+        /**
+         * Retrieves all certificates associated with a Document ID (Cédula), including their transaction hashes and timestamps.
+         */
+        async getCertificatesWithHashFromDocumentId(documentId: string | number): Promise<InfoType[]> {
+            try {
+                console.log(`\n📋 Retrieving complete certificates with hash for Document ID: ${documentId}`);
+                const rawCerts = await this.contract.getAllCertificatesByDocumentId(documentId.toString());
+
+                if (!rawCerts || rawCerts.length === 0) {
+                    return [];
+                }
+
+                const tokenIds = rawCerts.map((c: any) => (c.tokenId ?? c[0]).toString());
+
+                // Efficiently resolve all transaction logs in single batch RPC call
+                await this.batchResolveTxLogs(tokenIds);
+
+                const completeCerts: InfoType[] = rawCerts.map((rawCert: any) => {
+                    const tokenId = (rawCert.tokenId ?? rawCert[0]).toString();
+                    const txLog = CertificateRetriever.txCache.get(tokenId);
+
+                    return {
+                        tokenId: tokenId,
+                        name: rawCert.name ?? rawCert[1],
+                        documentId: rawCert.documentId ?? rawCert[2],
+                        course: rawCert.course ?? rawCert[3],
+                        description: rawCert.description ?? rawCert[4],
+                        institution: rawCert.institution ?? rawCert[5],
+                        area: rawCert.area ?? rawCert[6],
+                        issuedDate: rawCert.issuedDate ?? rawCert[7],
+                        startDate: rawCert.startDate ?? rawCert[8],
+                        endDate: rawCert.endDate ?? rawCert[9],
+                        hoursWorked: parseInt((rawCert.hoursWorked ?? rawCert[10]).toString()) || 0,
+                        signatoryName: rawCert.signatoryName ?? rawCert[11],
+                        hash: txLog?.hash || "",
+                        issueAt: txLog?.issueAt || ""
+                    };
+                });
+
+                return completeCerts;
+            } catch (error) {
+                console.error(`❌ Error getting certificates with hash for Document ID ${documentId}:`, (error as Error).message);
+                throw error;
+            }
         }
 
         /**
