@@ -345,7 +345,7 @@ const IdVerifierPage: React.FC = () => {
                             transition: 'all 0.3s ease'
                         }}
                     >
-                        {(isSearching) ? 'Buscando...' : 'Iniciar Búsqueda'}
+                        {(isSearching) ? 'Validando...' : 'Iniciar Validación'}
                     </Button>
 
                     {renderContent()}

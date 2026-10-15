@@ -6,10 +6,10 @@ import {
 } from '@mui/icons-material'
 
 export const drawerItemsVerifier = [
-  { text: 'Hash', icon: HashIcon }
+  { text: 'Hash', icon: HashIcon },
+  { text: 'Token ID', icon: IdIcon }
 ]
 export const drawerItemsSearch = [
-  { text: 'Token ID', icon: IdIcon },
   { text: 'Cédula de Identidad', icon: BadgeIcon }
   // { text: 'Institución', icon: InstitutionIcon }
 ]
