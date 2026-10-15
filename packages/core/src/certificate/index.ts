@@ -731,25 +731,34 @@ export namespace Certificate {
             this.contract = new ethers.Contract(Config.CONTRACT_ADDRESS, abi, this.wallet);
         }
 
-        private async getDynamicGasPrice(): Promise<GasConfig> {
-            const defaultGasLimit = 1200000;
-            const defaultGasPrice = 100000000000n; // 100 gwei
-            const defaultMaxFee = 150000000000n; // 150 gwei
-            const defaultPriorityFee = 50000000000n; // 50 gwei
+        private async getDynamicGasPrice(blockchainParams?: any): Promise<GasConfig> {
+            let defaultGasLimit = 800000;
+            if (blockchainParams) {
+                try {
+                    const estimated = await this.contract.issueCertificate.estimateGas(blockchainParams);
+                    defaultGasLimit = Number((estimated * 125n) / 100n);
+                } catch (e) {
+                    console.warn("Could not estimate gas dynamically, using fallback limit:", (e as Error).message);
+                }
+            }
+
+            const defaultGasPrice = 35000000000n; // 35 gwei
+            const defaultMaxFee = 50000000000n; // 50 gwei
+            const defaultPriorityFee = 30000000000n; // 30 gwei
 
             try {
                 const feeData = await this.provider.getFeeData();
                 if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
                     return {
                         type: 2,
-                        maxFeePerGas: feeData.maxFeePerGas * 2n,
-                        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas * 2n,
+                        maxFeePerGas: (feeData.maxFeePerGas * 125n) / 100n,
+                        maxPriorityFeePerGas: (feeData.maxPriorityFeePerGas * 125n) / 100n,
                         gasLimit: defaultGasLimit
                     };
                 } else {
                     return {
                         type: 0,
-                        gasPrice: feeData.gasPrice ? feeData.gasPrice * 2n : defaultGasPrice,
+                        gasPrice: feeData.gasPrice ? (feeData.gasPrice * 125n) / 100n : defaultGasPrice,
                         gasLimit: defaultGasLimit
                     };
                 }
@@ -796,9 +805,9 @@ export namespace Certificate {
         }> {
             try {
                 console.log(`\n🚀 Starting certificate issuance on Blockchain for: ${params.name}`);
-                const gasConfig = await this.getDynamicGasPrice();
-
                 const { localIssued, localLimit, ...blockchainParams } = params as any;
+                const gasConfig = await this.getDynamicGasPrice(blockchainParams);
+
                 const tx = await this.contract.issueCertificate(blockchainParams, gasConfig);
                 console.log(`Transaction sent: ${tx.hash}`);
 
