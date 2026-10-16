@@ -89,6 +89,22 @@ export namespace Certificate {
     type CertificateMetadata = CertificateTypes.CertificateMetadata;
     type TransactionInfo = CertificateTypes.TransactionInfo;
 
+    export interface InstitutionCertificateItem {
+        tokenId: string;
+        name: string;
+        documentId: string;
+        course: string;
+        description: string;
+        area: string;
+        signatoryName: string;
+    }
+
+    export interface InstitutionCertificatesResult {
+        certificates: InstitutionCertificateItem[];
+        totalCount: number;
+        totalPages: number;
+    }
+
     export interface TxLogData {
         hash: string;
         blockNumber: number;
@@ -233,6 +249,34 @@ export namespace Certificate {
                     "name": "certificates",
                     "type": "tuple[]"
                 }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                { "internalType": "string", "name": "_institution", "type": "string" },
+                { "internalType": "uint256", "name": "_offset", "type": "uint256" },
+                { "internalType": "uint256", "name": "_limit", "type": "uint256" }
+            ],
+            "name": "getCertificatesByInstitution",
+            "outputs": [
+                {
+                    "components": [
+                        { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+                        { "internalType": "string", "name": "name", "type": "string" },
+                        { "internalType": "string", "name": "documentId", "type": "string" },
+                        { "internalType": "string", "name": "course", "type": "string" },
+                        { "internalType": "string", "name": "description", "type": "string" },
+                        { "internalType": "string", "name": "area", "type": "string" },
+                        { "internalType": "string", "name": "signatoryName", "type": "string" }
+                    ],
+                    "internalType": "struct AcademicCertificateNew.InstitutionCertificateInfo[]",
+                    "name": "certificates",
+                    "type": "tuple[]"
+                },
+                { "internalType": "uint256", "name": "totalCount", "type": "uint256" },
+                { "internalType": "uint256", "name": "totalPages", "type": "uint256" }
             ],
             "stateMutability": "view",
             "type": "function"
@@ -760,6 +804,44 @@ export namespace Certificate {
         //         throw error;
         //     }
         // }
+
+        /**
+         * Retrieves paginated certificates for an institution directly from the smart contract.
+         * Lightweight query: does not resolve hashes or timestamps to keep latency ~100ms.
+         */
+        async getCertificatesByInstitution(
+            institution: string,
+            offset: number = 0,
+            limit: number = 10
+        ): Promise<InstitutionCertificatesResult> {
+            try {
+                console.log(`\n📋 Retrieving paginated certificates for: "${institution}" (offset: ${offset}, limit: ${limit})`);
+                const [rawCerts, totalCount, totalPages] = await this.contract.getCertificatesByInstitution(
+                    institution,
+                    BigInt(offset),
+                    BigInt(limit)
+                );
+
+                const certificates: InstitutionCertificateItem[] = (rawCerts || []).map((rawCert: any) => ({
+                    tokenId: (rawCert.tokenId ?? rawCert[0]).toString(),
+                    name: rawCert.name ?? rawCert[1],
+                    documentId: rawCert.documentId ?? rawCert[2],
+                    course: rawCert.course ?? rawCert[3],
+                    description: rawCert.description ?? rawCert[4],
+                    area: rawCert.area ?? rawCert[5],
+                    signatoryName: rawCert.signatoryName ?? rawCert[6]
+                }));
+
+                return {
+                    certificates,
+                    totalCount: Number(totalCount),
+                    totalPages: Number(totalPages)
+                };
+            } catch (error) {
+                console.error(`❌ Error in getCertificatesByInstitution:`, (error as Error).message);
+                throw error;
+            }
+        }
 
         async getCertificatesCountFromDocumentId(documentId: string | number): Promise<number> {
             try {

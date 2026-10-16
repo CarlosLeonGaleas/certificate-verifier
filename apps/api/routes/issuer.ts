@@ -1712,3 +1712,158 @@ issuer.post(
   }
 );
 
+// ==========================================
+// CERTIFICATE MANAGEMENT ENDPOINTS
+// ==========================================
+
+// Get paginated certificates by user's institution
+issuer.get(
+  '/certificates/institution',
+  describeRoute({
+    tags: ['Issuer Certificates'],
+    summary: 'Obtener catálogo paginado de certificados de la institución',
+    description: 'Consulta los certificados en blockchain emitidos por la institución del usuario autenticado.',
+    responses: {
+      200: {
+        description: 'Catálogo de certificados recuperado exitosamente'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const institutionId = user.institutionId;
+
+    try {
+      const offset = parseInt(c.req.query('offset') || '0', 10);
+      const limit = parseInt(c.req.query('limit') || '10', 10);
+
+      // Query institution name from Supabase using user's institutionId
+      const { data: instData, error: instError } = await supabase
+        .from('Institution')
+        .select('institution_name')
+        .eq('institutionID', institutionId)
+        .single();
+
+      if (instError || !instData || !instData.institution_name) {
+        console.error('Error fetching institution_name from Supabase:', instError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'No se pudo identificar el nombre de la institución para la consulta en blockchain.'
+          },
+          500
+        );
+      }
+
+      const institutionName = instData.institution_name;
+      const retriever = new Certificate.CertificateRetriever();
+      const result = await retriever.getCertificatesByInstitution(institutionName, offset, limit);
+
+      return c.json(
+        {
+          success: true,
+          data: result.certificates,
+          certificates: result.certificates,
+          totalCount: result.totalCount,
+          totalPages: result.totalPages,
+          institutionName
+        },
+        200
+      );
+    } catch (error) {
+      console.error('Error in GET /certificates/institution:', error);
+      return c.json(
+        {
+          type: 'blockchain',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: `Error al consultar certificados en blockchain: ${error instanceof Error ? error.message : String(error)}`
+        },
+        500
+      );
+    }
+  }
+);
+
+// Get certificates by document ID (filtered by user's institution with complete hash/timestamp info)
+issuer.get(
+  '/certificates/document/:documentId',
+  describeRoute({
+    tags: ['Issuer Certificates'],
+    summary: 'Obtener certificados por cédula de la institución',
+    description: 'Consulta los certificados en blockchain asociados a una cédula para la institución del usuario autenticado.',
+    responses: {
+      200: {
+        description: 'Certificados recuperados exitosamente'
+      },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const institutionId = user.institutionId;
+    const documentId = c.req.param('documentId');
+
+    if (!documentId) {
+      return c.json(
+        {
+          type: 'validation',
+          code: ErrorCodes.Validation.REQUIRED_FIELD,
+          message: 'El número de cédula es requerido.'
+        },
+        400
+      );
+    }
+
+    try {
+      const { data: instData, error: instError } = await supabase
+        .from('Institution')
+        .select('institution_name')
+        .eq('institutionID', institutionId)
+        .single();
+
+      if (instError || !instData || !instData.institution_name) {
+        console.error('Error fetching institution_name from Supabase:', instError);
+        return c.json(
+          {
+            type: 'database',
+            code: ErrorCodes.Server.INTERNAL_ERROR,
+            message: 'No se pudo identificar el nombre de la institución para la consulta.'
+          },
+          500
+        );
+      }
+
+      const institutionName = instData.institution_name;
+      const retriever = new Certificate.CertificateRetriever();
+      const allCerts = await retriever.getCertificatesWithHashFromDocumentId(documentId);
+
+      const institutionCerts = allCerts.filter(
+        (cert) => cert.institution.trim().toLowerCase() === institutionName.trim().toLowerCase()
+      );
+
+      return c.json(
+        {
+          success: true,
+          data: institutionCerts,
+          certificates: institutionCerts,
+          totalCount: institutionCerts.length,
+          allCount: allCerts.length,
+          institutionName
+        },
+        200
+      );
+    } catch (error) {
+      console.error('Error in GET /certificates/document/:documentId:', error);
+      return c.json(
+        {
+          type: 'blockchain',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: `Error al consultar certificados en blockchain: ${error instanceof Error ? error.message : String(error)}`
+        },
+        500
+      );
+    }
+  }
+);
