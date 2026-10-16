@@ -1737,6 +1737,8 @@ issuer.get(
     try {
       const offset = parseInt(c.req.query('offset') || '0', 10);
       const limit = parseInt(c.req.query('limit') || '10', 10);
+      const rawOrder = c.req.query('order')?.toLowerCase();
+      const order: 'asc' | 'desc' = rawOrder === 'asc' ? 'asc' : 'desc';
 
       // Query institution name from Supabase using user's institutionId
       const { data: instData, error: instError } = await supabase
@@ -1759,7 +1761,7 @@ issuer.get(
 
       const institutionName = instData.institution_name;
       const retriever = new Certificate.CertificateRetriever();
-      const result = await retriever.getCertificatesByInstitution(institutionName, offset, limit);
+      const result = await retriever.getCertificatesByInstitution(institutionName, offset, limit, order);
 
       return c.json(
         {
@@ -1768,6 +1770,7 @@ issuer.get(
           certificates: result.certificates,
           totalCount: result.totalCount,
           totalPages: result.totalPages,
+          order,
           institutionName
         },
         200

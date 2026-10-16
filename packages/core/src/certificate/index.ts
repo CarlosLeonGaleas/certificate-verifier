@@ -103,6 +103,7 @@ export namespace Certificate {
         certificates: InstitutionCertificateItem[];
         totalCount: number;
         totalPages: number;
+        order?: 'asc' | 'desc';
     }
 
     export interface TxLogData {
@@ -812,31 +813,85 @@ export namespace Certificate {
         async getCertificatesByInstitution(
             institution: string,
             offset: number = 0,
-            limit: number = 10
+            limit: number = 10,
+            order: 'asc' | 'desc' = 'desc'
         ): Promise<InstitutionCertificatesResult> {
             try {
-                console.log(`\n📋 Retrieving paginated certificates for: "${institution}" (offset: ${offset}, limit: ${limit})`);
-                const [rawCerts, totalCount, totalPages] = await this.contract.getCertificatesByInstitution(
-                    institution,
-                    BigInt(offset),
-                    BigInt(limit)
-                );
+                console.log(`\n📋 Retrieving paginated certificates for: "${institution}" (offset: ${offset}, limit: ${limit}, order: ${order})`);
 
-                const certificates: InstitutionCertificateItem[] = (rawCerts || []).map((rawCert: any) => ({
-                    tokenId: (rawCert.tokenId ?? rawCert[0]).toString(),
-                    name: rawCert.name ?? rawCert[1],
-                    documentId: rawCert.documentId ?? rawCert[2],
-                    course: rawCert.course ?? rawCert[3],
-                    description: rawCert.description ?? rawCert[4],
-                    area: rawCert.area ?? rawCert[5],
-                    signatoryName: rawCert.signatoryName ?? rawCert[6]
-                }));
+                if (order === 'desc') {
+                    // Query total count via lightweight contract call
+                    const [, totalCountBigInt, totalPagesBigInt] = await this.contract.getCertificatesByInstitution(
+                        institution,
+                        0n,
+                        0n
+                    );
+                    const totalCount = Number(totalCountBigInt);
+                    const totalPages = Number(totalPagesBigInt);
 
-                return {
-                    certificates,
-                    totalCount: Number(totalCount),
-                    totalPages: Number(totalPages)
-                };
+                    if (totalCount === 0 || offset >= totalCount) {
+                        return {
+                            certificates: [],
+                            totalCount,
+                            totalPages,
+                            order
+                        };
+                    }
+
+                    const remaining = totalCount - offset;
+                    const takeCount = Math.min(limit, remaining);
+                    const contractOffset = remaining - takeCount;
+
+                    const [rawCerts] = await this.contract.getCertificatesByInstitution(
+                        institution,
+                        BigInt(contractOffset),
+                        BigInt(takeCount)
+                    );
+
+                    const certificates: InstitutionCertificateItem[] = (rawCerts || []).map((rawCert: any) => ({
+                        tokenId: (rawCert.tokenId ?? rawCert[0]).toString(),
+                        name: rawCert.name ?? rawCert[1],
+                        documentId: rawCert.documentId ?? rawCert[2],
+                        course: rawCert.course ?? rawCert[3],
+                        description: rawCert.description ?? rawCert[4],
+                        area: rawCert.area ?? rawCert[5],
+                        signatoryName: rawCert.signatoryName ?? rawCert[6]
+                    }));
+
+                    // Invert slice so newest tokens appear first
+                    certificates.reverse();
+
+                    return {
+                        certificates,
+                        totalCount,
+                        totalPages,
+                        order
+                    };
+                } else {
+                    // Direct ascending query from smart contract
+                    const [rawCerts, totalCount, totalPages] = await this.contract.getCertificatesByInstitution(
+                        institution,
+                        BigInt(offset),
+                        BigInt(limit)
+                    );
+
+                    const certificates: InstitutionCertificateItem[] = (rawCerts || []).map((rawCert: any) => ({
+                        tokenId: (rawCert.tokenId ?? rawCert[0]).toString(),
+                        name: rawCert.name ?? rawCert[1],
+                        documentId: rawCert.documentId ?? rawCert[2],
+                        course: rawCert.course ?? rawCert[3],
+                        description: rawCert.description ?? rawCert[4],
+                        area: rawCert.area ?? rawCert[5],
+                        signatoryName: rawCert.signatoryName ?? rawCert[6]
+                    }));
+
+                    return {
+                        certificates,
+                        totalCount: Number(totalCount),
+                        totalPages: Number(totalPages),
+                        order
+                    };
+                }
             } catch (error) {
                 console.error(`❌ Error in getCertificatesByInstitution:`, (error as Error).message);
                 throw error;
