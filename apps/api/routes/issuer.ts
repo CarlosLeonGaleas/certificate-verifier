@@ -1867,3 +1867,170 @@ issuer.get(
     }
   }
 );
+
+// Get complete certificate by Token ID
+issuer.get(
+  '/certificates/token/:tokenId',
+  describeRoute({
+    tags: ['Issuer Certificates'],
+    summary: 'Obtener certificado por Token ID',
+    description: 'Consulta los datos completos de un certificado en blockchain a partir de su Token ID.',
+    responses: {
+      200: { description: 'Certificado recuperado exitosamente' },
+      404: { description: 'Certificado no encontrado' },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const institutionId = user.institutionId;
+    const tokenId = c.req.param('tokenId');
+
+    if (!tokenId || isNaN(Number(tokenId))) {
+      return c.json(
+        {
+          type: 'validation',
+          code: ErrorCodes.Validation.REQUIRED_FIELD,
+          message: 'El Token ID debe ser un número válido.'
+        },
+        400
+      );
+    }
+
+    try {
+      const { data: instData } = await supabase
+        .from('Institution')
+        .select('institution_name')
+        .eq('institutionID', institutionId)
+        .single();
+
+      const institutionName = instData?.institution_name || '';
+      const retriever = new Certificate.CertificateRetriever();
+      const cert = await retriever.getCompleteCertificateFromTokenId(tokenId);
+
+      if (!cert || !cert.name) {
+        return c.json(
+          {
+            type: 'not_found',
+            code: ErrorCodes.Server.NOT_FOUND,
+            message: `No se encontró ningún certificado con el Token ID #${tokenId}.`
+          },
+          404
+        );
+      }
+
+      const institutionMatch = institutionName
+        ? cert.institution.trim().toLowerCase() === institutionName.trim().toLowerCase()
+        : true;
+
+      return c.json(
+        {
+          success: true,
+          data: cert,
+          institutionMatch,
+          institutionName
+        },
+        200
+      );
+    } catch (error: any) {
+      console.error(`Error in GET /certificates/token/${tokenId}:`, error);
+      const isRevert = error?.message?.includes('revert') || error?.message?.includes('nonexistent');
+      if (isRevert) {
+        return c.json(
+          {
+            type: 'not_found',
+            code: ErrorCodes.Server.NOT_FOUND,
+            message: `No se encontró ningún certificado con el Token ID #${tokenId}.`
+          },
+          404
+        );
+      }
+      return c.json(
+        {
+          type: 'blockchain',
+          code: ErrorCodes.Server.INTERNAL_ERROR,
+          message: `Error al consultar certificado en blockchain: ${error instanceof Error ? error.message : String(error)}`
+        },
+        500
+      );
+    }
+  }
+);
+
+// Get complete certificate by Transaction Hash
+issuer.get(
+  '/certificates/hash/:hash',
+  describeRoute({
+    tags: ['Issuer Certificates'],
+    summary: 'Obtener certificado por Hash de Transacción',
+    description: 'Consulta los datos completos de un certificado en blockchain a partir de su hash de transacción.',
+    responses: {
+      200: { description: 'Certificado recuperado exitosamente' },
+      404: { description: 'Certificado no encontrado' },
+      500: ErrorResponses[500]
+    }
+  }),
+  async (c) => {
+    const user = c.get('user');
+    const institutionId = user.institutionId;
+    const hash = c.req.param('hash');
+
+    if (!hash || !/^0x[a-fA-F0-9]{64}$/.test(hash)) {
+      return c.json(
+        {
+          type: 'validation',
+          code: ErrorCodes.Validation.REQUIRED_FIELD,
+          message: 'El Hash debe ser una cadena hexadecimal de 66 caracteres comenzando con 0x.'
+        },
+        400
+      );
+    }
+
+    try {
+      const { data: instData } = await supabase
+        .from('Institution')
+        .select('institution_name')
+        .eq('institutionID', institutionId)
+        .single();
+
+      const institutionName = instData?.institution_name || '';
+      const retriever = new Certificate.CertificateRetriever();
+      const cert = await retriever.getCompleteInfoFromTxHash(hash);
+
+      if (!cert || !cert.name) {
+        return c.json(
+          {
+            type: 'not_found',
+            code: ErrorCodes.Server.NOT_FOUND,
+            message: `No se encontró ningún certificado asociado al hash ${hash}.`
+          },
+          404
+        );
+      }
+
+      const institutionMatch = institutionName
+        ? cert.institution.trim().toLowerCase() === institutionName.trim().toLowerCase()
+        : true;
+
+      return c.json(
+        {
+          success: true,
+          data: cert,
+          institutionMatch,
+          institutionName
+        },
+        200
+      );
+    } catch (error: any) {
+      console.error(`Error in GET /certificates/hash/${hash}:`, error);
+      return c.json(
+        {
+          type: 'not_found',
+          code: ErrorCodes.Server.NOT_FOUND,
+          message: `No se encontró ningún certificado asociado a la transacción proporcionada o la transacción no corresponde a una emisión de certificado.`
+        },
+        404
+      );
+    }
+  }
+);
